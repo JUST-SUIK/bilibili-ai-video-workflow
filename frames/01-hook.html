@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>钩子：反直觉开场</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            background: #0a0d12;
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* 暗角效果 */
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
+            pointer-events: none;
+        }
+
+        /* 主容器 */
+        .hook-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 帧标题 */
+        .frame-header {
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+        }
+
+        /* 主文字区域 */
+        .text-reveal {
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* 逐字揭示文字 */
+        .reveal-text {
+            font-size: 6vw;
+            font-weight: 700;
+            color: #f5f5f7;
+            line-height: 1.4;
+            min-height: 120px;
+            position: relative;
+        }
+
+        .reveal-text .char {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInChar 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes fadeInChar {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Chromatic效果 */
+        .reveal-text .char.chromatic {
+            text-shadow: 2px 0 #ff3b6f, -2px 0 #00d4ff;
+            animation: fadeInCharChromatic 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes fadeInCharChromatic {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+                text-shadow: 4px 0 #ff3b6f, -4px 0 #00d4ff;
+            }
+            50% {
+                text-shadow: 2px 0 #ff3b6f, -2px 0 #00d4ff;
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+                text-shadow: 2px 0 #ff3b6f, -2px 0 #00d4ff;
+            }
+        }
+
+        /* 光标 */
+        .cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1.2em;
+            background: #F59E0B;
+            margin-left: 8px;
+            vertical-align: middle;
+            animation: blinkCursor 1s ease-in-out infinite;
+        }
+
+        @keyframes blinkCursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* 光标拖尾 */
+        .cursor-trail {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 60px;
+            background: radial-gradient(ellipse, rgba(245, 158, 11, 0.4) 0%, transparent 70%);
+            opacity: 0;
+            animation: fadeInTrail 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2s forwards;
+        }
+
+        @keyframes fadeInTrail {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 数字动画区域 */
+        .number-animation {
+            margin-top: 60px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            opacity: 0;
+            animation: fadeInNumbers 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards;
+        }
+
+        @keyframes fadeInNumbers {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .number-old {
+            font-size: 80px;
+            font-weight: 700;
+            color: #64748B;
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .arrow {
+            font-size: 40px;
+            color: #F59E0B;
+        }
+
+        .number-new {
+            font-size: 100px;
+            font-weight: 700;
+            color: #F59E0B;
+            text-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+        }
+
+        /* 副标 */
+        .subtitle {
+            font-size: 24px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 40px;
+            opacity: 0;
+            animation: fadeInSubtitle 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4s forwards;
+        }
+
+        @keyframes fadeInSubtitle {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 定向光斑 */
+        .light-flare {
+            position: absolute;
+            width: 300px;
+            height: 4px;
+            background: linear-gradient(45deg, transparent, rgba(245, 158, 11, 0.3), transparent);
+            mix-blend-mode: screen;
+            opacity: 0;
+        }
+
+        .light-flare-1 {
+            top: 30%;
+            left: 20%;
+            transform: rotate(45deg);
+            animation: flare1 2s ease-in-out 1s infinite;
+        }
+
+        .light-flare-2 {
+            top: 60%;
+            right: 25%;
+            transform: rotate(-30deg);
+            animation: flare2 2.5s ease-in-out 1.5s infinite;
+        }
+
+        .light-flare-3 {
+            bottom: 30%;
+            left: 30%;
+            transform: rotate(60deg);
+            animation: flare3 3s ease-in-out 2s infinite;
+        }
+
+        @keyframes flare1 {
+            0%, 100% { opacity: 0; transform: rotate(45deg) translateX(-50px); }
+            50% { opacity: 0.6; transform: rotate(45deg) translateX(50px); }
+        }
+
+        @keyframes flare2 {
+            0%, 100% { opacity: 0; transform: rotate(-30deg) translateY(-30px); }
+            50% { opacity: 0.5; transform: rotate(-30deg) translateY(30px); }
+        }
+
+        @keyframes flare3 {
+            0%, 100% { opacity: 0; transform: rotate(60deg) translateX(40px); }
+            50% { opacity: 0.4; transform: rotate(60deg) translateX(-40px); }
+        }
+
+        /* Timecode */
+        .timecode {
+            position: absolute;
+            bottom: 40px;
+            right: 60px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 减少动画模式 */
+        @media (prefers-reduced-motion: reduce) {
+            .reveal-text .char,
+            .reveal-text .char.chromatic {
+                opacity: 1;
+                transform: none;
+                animation: none;
+            }
+            .cursor {
+                animation: none;
+            }
+            .light-flare {
+                animation: none;
+                opacity: 0.3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 暗角 -->
+    <div class="vignette"></div>
+
+    <!-- 定向光斑 -->
+    <div class="light-flare light-flare-1"></div>
+    <div class="light-flare light-flare-2"></div>
+    <div class="light-flare light-flare-3"></div>
+
+    <!-- 主容器 -->
+    <div class="hook-container">
+        <!-- 帧标题 -->
+        <div class="frame-header">FRAME 01 · OPENING</div>
+
+        <!-- 文字揭示区域 -->
+        <div class="text-reveal">
+            <div class="reveal-text" id="revealText"></div>
+            <div class="cursor-trail"></div>
+        </div>
+
+        <!-- 数字动画 -->
+        <div class="number-animation">
+            <span class="number-old">2小时</span>
+            <span class="arrow">→</span>
+            <span class="number-new">10分钟</span>
+        </div>
+
+        <!-- 副标 -->
+        <p class="subtitle">AI写周报的正确姿势</p>
+
+        <!-- Timecode -->
+        <div class="timecode">00:00:03</div>
+    </div>
+
+    <script>
+        // 逐字揭示文字
+        const text = "真正花时间的不是"写"，是"想"";
+        const revealText = document.getElementById('revealText');
+        let charIndex = 0;
+
+        function revealNextChar() {
+            if (charIndex < text.length) {
+                const charSpan = document.createElement('span');
+                charSpan.className = 'char';
+                charSpan.textContent = text[charIndex];
+
+                // 对"想"字添加chromatic效果
+                if (text[charIndex] === '想') {
+                    charSpan.classList.add('chromatic');
+                }
+
+                revealText.appendChild(charSpan);
+
+                // 添加光标
+                const cursor = document.createElement('span');
+                cursor.className = 'cursor';
+                revealText.appendChild(cursor);
+
+                charIndex++;
+
+                // 80ms间隔揭示下一个字符
+                setTimeout(revealNextChar, 80);
+            } else {
+                // 移除最后的光标
+                const lastCursor = revealText.querySelector('.cursor:last-child');
+                if (lastCursor) {
+                    lastCursor.remove();
+                }
+            }
+        }
+
+        // 开始揭示动画
+        setTimeout(revealNextChar, 500);
+    </script>
+</body>
+</html>

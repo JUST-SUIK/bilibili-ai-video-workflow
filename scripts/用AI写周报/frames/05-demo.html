@@ -1,0 +1,411 @@
+<!-- REVIEW: PASSED -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Frame 05 - 核心方案3：实操演示</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter+Tight:wght@700;800;900&family=JetBrains+Mono:wght@400;500&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #0a0a0a;
+    overflow: hidden;
+    font-family: 'Noto Sans SC', 'Inter Tight', sans-serif;
+    position: relative;
+  }
+
+  /* 暗渐变底 */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+    z-index: 0;
+  }
+
+  /* 顶部编号 */
+  .section-num {
+    position: absolute;
+    top: 48px;
+    left: 80px;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 96px;
+    color: rgba(255,255,255,0.06);
+    z-index: 1;
+    opacity: 0;
+    animation: rollIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+  }
+
+  @keyframes rollIn {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 导航面包屑 */
+  .breadcrumb {
+    position: absolute;
+    top: 56px;
+    right: 80px;
+    display: flex;
+    gap: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    z-index: 10;
+  }
+
+  .breadcrumb span {
+    color: rgba(255,255,255,0.25);
+    opacity: 0;
+    animation: fadeIn 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  }
+  .breadcrumb span:nth-child(1) { animation-delay: 0.4s; }
+  .breadcrumb span:nth-child(2) { animation-delay: 0.5s; color: rgba(255,255,255,0.15); }
+  .breadcrumb span.active { color: #ff5a2c; animation-delay: 0.6s; }
+
+  /* 橙色焦点卡 - 暗调 */
+  .focus-card {
+    position: absolute;
+    top: 120px;
+    right: 0;
+    width: 1180px;
+    height: 840px;
+    background: rgba(255,90,44,0.15);
+    border: 1px solid rgba(255,90,44,0.3);
+    border-radius: 36px 0 0 36px;
+    z-index: 3;
+    transform: translateX(110%);
+    animation: cardSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+    box-shadow: -20px 0 60px rgba(255,90,44,0.1);
+    padding: 60px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  @keyframes cardSlideIn {
+    from { transform: translateX(110%); }
+    to { transform: translateX(0); }
+  }
+
+  /* 卡片内标签 */
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 19px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    opacity: 0;
+    min-height: 21px;
+    animation: fadeInUp 0.5s cubic-bezier(0.32, 0.72, 0, 1) 1.15s forwards;
+  }
+
+  /* 卡片内大标题 */
+  .card-title {
+    font-family: 'Archivo Black', 'Noto Sans SC', sans-serif;
+    font-size: 56px;
+    font-weight: 900;
+    color: #ff5a2c;
+    line-height: 1.5;
+    min-height: 84px;
+    opacity: 0;
+    animation: fadeInUp 0.5s cubic-bezier(0.32, 0.72, 0, 1) 1.3s forwards;
+  }
+
+  /* 演示区域 */
+  .demo-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    opacity: 0;
+    animation: fadeInUp 0.6s cubic-bezier(0.32, 0.72, 0, 1) 1.6s forwards;
+  }
+
+  /* 输入区 */
+  .input-section {
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 28px 32px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .input-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .input-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .keyword-tag {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 21px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.8);
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .keyword-tag:nth-child(1) { animation: tagPop 0.4s cubic-bezier(0.32, 0.72, 0, 1) 2s forwards, tagBreathe 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.4s infinite alternate; }
+  .keyword-tag:nth-child(2) { animation: tagPop 0.4s cubic-bezier(0.32, 0.72, 0, 1) 2.2s forwards, tagBreathe 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.6s infinite alternate; }
+  .keyword-tag:nth-child(3) { animation: tagPop 0.4s cubic-bezier(0.32, 0.72, 0, 1) 2.4s forwards, tagBreathe 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.8s infinite alternate; }
+  .keyword-tag:nth-child(4) { animation: tagPop 0.4s cubic-bezier(0.32, 0.72, 0, 1) 2.6s forwards, tagBreathe 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.0s infinite alternate; }
+
+  @keyframes tagBreathe {
+    0% { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+    100% { background: rgba(255,90,44,0.1); border-color: rgba(255,90,44,0.2); }
+  }
+
+  @keyframes tagPop {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* 箭头 */
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    opacity: 0;
+    animation: fadeIn 0.4s cubic-bezier(0.32, 0.72, 0, 1) 3s forwards;
+  }
+
+  .flow-arrow .line {
+    width: 60px;
+    height: 2px;
+    background: rgba(255,255,255,0.15);
+  }
+
+  .flow-arrow .text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.08em;
+  }
+
+  /* 输出区 */
+  .output-section {
+    background: rgba(255,255,255,0.04);
+    border-radius: 16px;
+    padding: 28px 32px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .output-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .output-header .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    animation: pulse 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .output-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .output-line {
+    font-size: 20px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.6;
+    min-height: 23px;
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  .output-line:nth-child(1) { animation: lineIn 0.3s cubic-bezier(0.32, 0.72, 0, 1) 3.5s forwards; }
+  .output-line:nth-child(2) { animation: lineIn 0.3s cubic-bezier(0.32, 0.72, 0, 1) 3.7s forwards; }
+  .output-line:nth-child(3) { animation: lineIn 0.3s cubic-bezier(0.32, 0.72, 0, 1) 3.9s forwards; }
+  .output-line:nth-child(4) { animation: lineIn 0.3s cubic-bezier(0.32, 0.72, 0, 1) 4.1s forwards; }
+  .output-line:nth-child(5) { animation: lineIn 0.3s cubic-bezier(0.32, 0.72, 0, 1) 4.3s forwards; }
+
+  @keyframes lineIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .output-line .highlight {
+    color: #ff5a2c;
+    font-weight: 700;
+    background: rgba(255,90,44,0.08);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+
+  /* 结果标签 */
+  .result-badge {
+    position: absolute;
+    bottom: 60px;
+    left: 80px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 10;
+    opacity: 0;
+    animation: fadeInUp 0.6s cubic-bezier(0.32, 0.72, 0, 1) 4.8s forwards;
+  }
+
+  .result-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 48px;
+    font-weight: 900;
+    color: #ff5a2c;
+    text-shadow: 0 0 30px rgba(255,90,44,0.3);
+  }
+
+  .result-text {
+    font-size: 25px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.5;
+    min-height: 60px;
+  }
+
+  /* 左下 footer */
+  .footer {
+    position: absolute;
+    bottom: 48px;
+    left: 80px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+    opacity: 0;
+    animation: fadeIn 0.5s cubic-bezier(0.32, 0.72, 0, 1) 5.2s forwards;
+  }
+
+  .footer-tick {
+    width: 24px;
+    height: 3px;
+    background: #ff5a2c;
+  }
+
+  .footer-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    min-height: 20px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .focus-card { transform: none !important; animation: none !important; }
+    .section-num { opacity: 1 !important; animation: none !important; }
+    .breadcrumb span, .card-label, .card-title, .demo-area, .flow-arrow { opacity: 1 !important; animation: none !important; }
+    .keyword-tag { opacity: 1 !important; animation: none !important; transform: none !important; background: rgba(10,10,10,0.08) !important; border-color: rgba(10,10,10,0.12) !important; }
+    .output-line { opacity: 1 !important; animation: none !important; transform: none !important; }
+    .result-badge, .footer { opacity: 1 !important; animation: none !important; }
+    .output-header .dot { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 编号 -->
+  <div class="section-num">05</div>
+
+  <!-- 面包屑 -->
+  <div class="breadcrumb">
+    <span>钩子</span>
+    <span>痛点</span>
+    <span>方案</span>
+    <span class="active">实操</span>
+  </div>
+
+  <!-- 焦点卡 -->
+  <div class="focus-card">
+    <div class="card-label">LIVE DEMO</div>
+    <div class="card-title">实操演示：10秒生成周报</div>
+
+    <div class="demo-area">
+      <!-- 输入 -->
+      <div class="input-section">
+        <div class="input-header">本周工作关键词</div>
+        <div class="input-keywords">
+          <div class="keyword-tag">周一 Q3目标会议</div>
+          <div class="keyword-tag">周三 交付产品方案V2</div>
+          <div class="keyword-tag">周四 帮小王解决服务器问题</div>
+          <div class="keyword-tag">周五 客户需求评审</div>
+        </div>
+      </div>
+
+      <!-- 流程箭头 -->
+      <div class="flow-arrow">
+        <div class="line"></div>
+        <div class="text">丢给AI · 基础版模板 · 10秒</div>
+        <div class="line"></div>
+      </div>
+
+      <!-- 输出 -->
+      <div class="output-section">
+        <div class="output-header">
+          <div class="dot"></div>
+          AI 生成的周报
+        </div>
+        <div class="output-lines">
+          <div class="output-line">本周重点推进 <span class="highlight">Q3目标对齐</span>，完成产品方案V2交付</div>
+          <div class="output-line">协助团队解决服务器问题，保障系统稳定运行</div>
+          <div class="output-line">完成客户需求评审，明确后续迭代方向</div>
+          <div class="output-line">---</div>
+          <div class="output-line">下周计划：跟进Q3目标落地，启动V3方案规划</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果标签 -->
+  <div class="result-badge">
+    <div class="result-time">10 分钟</div>
+    <div class="result-text">搞定一周周报<br>从"想"到"写"全流程</div>
+  </div>
+
+  <!-- footer -->
+  <div class="footer">
+    <div class="footer-tick"></div>
+    <div class="footer-label">FRAME 05 · PRACTICAL DEMO</div>
+  </div>
+
+</body>
+</html>

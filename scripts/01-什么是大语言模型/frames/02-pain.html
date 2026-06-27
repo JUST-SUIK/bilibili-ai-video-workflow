@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Frame 02 - 痛点：用AI的挫败感</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter+Tight:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px;
+    background: #0a0a0f;
+    font-family: 'Noto Sans SC', sans-serif;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  /* 背景网格 */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .caption {
+    position: absolute; top: 48px; left: 80px;
+    font-family: 'Inter Tight', monospace;
+    font-size: 13px; letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    opacity: 0;
+    animation: fadeIn 0.8s ease 0.3s forwards;
+  }
+
+  /* 聊天容器 */
+  .chat-container {
+    width: 700px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* 对话气泡 */
+  .bubble {
+    padding: 18px 24px;
+    border-radius: 18px;
+    font-size: 22px;
+    line-height: 1.6;
+    max-width: 85%;
+    opacity: 0;
+    position: relative;
+  }
+
+  .bubble.user {
+    align-self: flex-end;
+    background: #2563eb;
+    color: white;
+    border-bottom-right-radius: 4px;
+    animation: slideInRight 0.5s ease forwards;
+  }
+
+  .bubble.ai {
+    align-self: flex-start;
+    background: #1e1e2a;
+    color: #d1d5db;
+    border-bottom-left-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.06);
+    animation: slideInLeft 0.5s ease forwards;
+  }
+
+  .bubble.ai .highlight {
+    color: #ef4444;
+    text-decoration: line-through;
+    text-decoration-color: #ef4444;
+  }
+
+  .bubble.ai .waste {
+    background: rgba(239,68,68,0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #f87171;
+  }
+
+  /* 场景1：来回修改 */
+  .scene-1 .bubble:nth-child(1) { animation-delay: 0.5s; }
+  .scene-1 .bubble:nth-child(2) { animation-delay: 1.5s; }
+  .scene-1 .bubble:nth-child(3) { animation-delay: 2.5s; }
+  .scene-1 .bubble:nth-child(4) { animation-delay: 3.5s; }
+  .scene-1 .bubble:nth-child(5) { animation-delay: 4.5s; }
+  .scene-1 .bubble:nth-child(6) { animation-delay: 5.5s; }
+
+  /* 重写次数标签 */
+  .retry-badge {
+    align-self: center;
+    font-family: 'Inter Tight', monospace;
+    font-size: 14px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+  }
+
+  /* 转场文字 */
+  .turning-point {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10;
+    opacity: 0;
+    animation: fadeInScale 1s ease 8s forwards;
+  }
+
+  .turning-point .line1 {
+    font-size: 48px;
+    font-weight: 900;
+    color: #f5f5f7;
+    margin-bottom: 16px;
+  }
+
+  .turning-point .line2 {
+    font-size: 28px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .turning-point .line1 span {
+    color: #ff3b6f;
+  }
+
+  /* 右侧关键词 */
+  .keywords {
+    position: absolute;
+    right: 120px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    z-index: 2;
+  }
+
+  .keyword {
+    font-size: 20px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.12);
+    text-align: right;
+    opacity: 0;
+    animation: fadeIn 0.8s ease forwards;
+  }
+
+  .keyword:nth-child(1) { animation-delay: 2s; }
+  .keyword:nth-child(2) { animation-delay: 3s; }
+  .keyword:nth-child(3) { animation-delay: 4s; }
+  .keyword:nth-child(4) { animation-delay: 5s; }
+
+  .keyword.active {
+    color: #ef4444;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 6.5s forwards;
+  }
+
+  /* 底部元数据 */
+  .meta {
+    position: absolute; bottom: 48px; right: 80px;
+    font-family: 'Inter Tight', monospace;
+    font-size: 14px; color: rgba(255,255,255,0.25);
+    opacity: 0; animation: fadeIn 0.8s ease 9s forwards;
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fadeInScale {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bubble, .keyword, .turning-point, .caption, .meta { opacity: 1 !important; animation: none !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="caption">FRAME 02 · 痛点共鸣</div>
+
+  <!-- 聊天场景 -->
+  <div class="chat-container scene-1">
+    <div class="bubble user">帮我写一段产品介绍</div>
+    <div class="bubble ai">我们的产品采用先进的技术方案，致力于为用户提供卓越的体验...</div>
+    <div class="bubble user">太泛了，重写</div>
+    <div class="bubble ai">本产品以创新为核心驱动力，打造极致用户体验，助力用户实现目标...</div>
+    <div class="retry-badge">— 第 3 次 —</div>
+    <div class="bubble user">算了，<span class="highlight">这 AI 是不是听不懂人话</span></div>
+  </div>
+
+  <!-- 右侧关键词 -->
+  <div class="keywords">
+    <div class="keyword">不对，重写</div>
+    <div class="keyword">太泛了</div>
+    <div class="keyword">正确的废话</div>
+    <div class="keyword active">到底有没有用？</div>
+  </div>
+
+  <!-- 转场 -->
+  <div class="turning-point">
+    <div class="line1">问题不在 <span>AI</span></div>
+    <div class="line2">问题在你对它的理解</div>
+  </div>
+
+  <div class="meta">00:00:15</div>
+
+</body>
+</html>

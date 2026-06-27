@@ -1,0 +1,395 @@
+<!-- REVIEW: PASSED -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Frame 03 - 核心方案1：正确姿势</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter+Tight:wght@500;700;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #0a0a0f;
+    overflow: hidden;
+    font-family: 'Noto Sans SC', 'Inter Tight', sans-serif;
+    position: relative;
+  }
+
+  /* 上屏暗 + 下屏蓝 分割 */
+  .panel-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 540px;
+    background: rgba(255,255,255,0.08);
+    z-index: 2;
+    transform: translateY(-100%);
+    animation: panelDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+    display: flex;
+    align-items: center;
+    padding-left: 120px;
+  }
+
+  .panel-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 540px;
+    background: rgba(67,97,238,0.12);
+    z-index: 2;
+    transform: translateY(100%);
+    animation: panelUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+    display: flex;
+    align-items: center;
+    padding-left: 120px;
+  }
+
+  @keyframes panelDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes panelUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  /* 接缝 accent 条 */
+  .accent-bar {
+    position: absolute;
+    top: 536px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 8px;
+    width: 0;
+    background: rgba(255,255,255,0.15);
+    z-index: 10;
+    animation: barGrow 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
+  }
+
+  .accent-bar.breathing {
+    animation: barBreathe 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite alternate;
+  }
+
+  @keyframes barGrow {
+    from { width: 0; }
+    to { width: 320px; }
+  }
+
+  @keyframes barBreathe {
+    0% { width: 280px; }
+    100% { width: 360px; }
+  }
+
+  /* 顶部标签 */
+  .caption {
+    position: absolute;
+    top: 48px;
+    right: 80px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    opacity: 0;
+    animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s forwards;
+    z-index: 15;
+  }
+
+  /* 上屏内容：错误 vs 正确 */
+  .compare-row {
+    display: flex;
+    gap: 80px;
+    align-items: flex-start;
+  }
+
+  .compare-card {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+
+  .compare-card:nth-child(1) { animation: fadeInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s forwards; }
+  .compare-card:nth-child(2) { animation: fadeInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards; }
+
+  .compare-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .compare-label.wrong { color: #ef4444; }
+  .compare-label.right { color: #22c55e; }
+
+  .compare-label .icon {
+    font-size: 24px;
+  }
+
+  .compare-text {
+    font-size: 28px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.6;
+    max-width: 500px;
+    min-height: 84px;
+  }
+
+  .compare-text .strike {
+    text-decoration: line-through;
+    text-decoration-color: #ef4444;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .compare-text .check {
+    color: #22c55e;
+    font-weight: 900;
+  }
+
+  /* 下屏内容：金句 */
+  .blue-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .blue-line {
+    font-size: 36px;
+    font-weight: 700;
+    color: #ffffff;
+    opacity: 0;
+    transform: translateY(26px);
+    min-height: 54px;
+  }
+
+  .blue-line:nth-child(1) { animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s forwards; }
+  .blue-line:nth-child(2) { animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards; }
+  .blue-line:nth-child(3) { animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.1s forwards; }
+  .blue-line:nth-child(4) { animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.4s forwards; }
+  .blue-line:nth-child(5) { animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.7s forwards; }
+
+  .blue-line .accent {
+    color: #ff5a2c;
+    font-weight: 900;
+  }
+
+  .blue-line .on-blue {
+    color: #ffffff;
+  }
+
+  /* 右侧流程图 */
+  .flow-section {
+    position: absolute;
+    right: 120px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    z-index: 12;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  .flow-step:nth-child(1) { animation: slideInRight 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2s forwards; }
+  .flow-step:nth-child(2) { animation: slideInRight 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.5s forwards; }
+  .flow-step:nth-child(3) { animation: slideInRight 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+  .flow-step:nth-child(4) { animation: slideInRight 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.5s forwards; }
+
+  .flow-num {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .flow-num.active {
+    background: #ff5a2c;
+    animation: activePulse 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  }
+
+  @keyframes activePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,90,44,0.4); }
+    50% { box-shadow: 0 0 16px 4px rgba(255,90,44,0.6); }
+  }
+
+  .flow-text {
+    font-size: 22px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.5;
+    min-height: 33px;
+  }
+
+  .flow-text .key {
+    color: #ff5a2c;
+    font-weight: 700;
+  }
+
+  /* 连接线 */
+  .flow-connector {
+    width: 2px;
+    height: 20px;
+    background: rgba(255,255,255,0.1);
+    margin-left: 23px;
+    opacity: 0;
+  }
+
+  .flow-connector:nth-child(2) { animation: fadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.3s forwards; }
+  .flow-connector:nth-child(4) { animation: fadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.8s forwards; }
+  .flow-connector:nth-child(6) { animation: fadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.3s forwards; }
+
+  /* 底部强调 */
+  .bottom-emphasis {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.08em;
+    opacity: 0;
+    animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4s forwards;
+    min-height: 24px;
+    z-index: 15;
+  }
+
+  /* 底部元数据 */
+  .meta {
+    position: absolute;
+    bottom: 48px;
+    right: 80px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    opacity: 0;
+    animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4.5s forwards;
+    z-index: 15;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(26px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel-top, .panel-bottom { transform: none !important; animation: none !important; }
+    .accent-bar, .accent-bar.breathing { width: 320px !important; animation: none !important; }
+    .flow-num.active { animation: none !important; }
+    .compare-card, .blue-line, .flow-step, .flow-connector { opacity: 1 !important; animation: none !important; transform: none !important; }
+    .caption, .bottom-emphasis, .meta { opacity: 1 !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 上屏白 -->
+  <div class="panel-top">
+    <div class="compare-row">
+      <div class="compare-card">
+        <div class="compare-label wrong"><span class="icon">✗</span> 错误方式</div>
+        <div class="compare-text">
+          <span class="strike">"帮我写本周周报"</span><br>
+          <span style="font-size:20px;color:rgba(255,255,255,0.4)">AI不知道你这周干了啥</span>
+        </div>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label right"><span class="icon">✓</span> 正确方式</div>
+        <div class="compare-text">
+          先整理关键词 → 再让AI<span class="check">润色</span><br>
+          <span style="font-size:20px;color:rgba(255,255,255,0.4)">你负责事实，AI负责表达</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- accent 条 -->
+  <div class="accent-bar"></div>
+
+  <!-- 下屏蓝 -->
+  <div class="panel-bottom">
+    <div class="blue-content">
+      <div class="blue-line">AI写周报的正确姿势</div>
+      <div class="blue-line">不是让它<span class="accent">"帮你写"</span></div>
+      <div class="blue-line">是让它<span class="accent">"帮你润色"</span></div>
+      <div class="blue-line" style="font-size:24px;opacity:0.7;margin-top:12px">你花5分钟回忆事实，AI花10秒组织语言</div>
+    </div>
+  </div>
+
+  <!-- 顶部标签 -->
+  <div class="caption">FRAME 03 · 正确姿势</div>
+
+  <!-- 右侧流程 -->
+  <div class="flow-section">
+    <div class="flow-step">
+      <div class="flow-num active">1</div>
+      <div class="flow-text">花5分钟，用<span class="key">关键词</span>回忆本周</div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-text">把关键词丢给AI，用<span class="key">模板</span></div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-text">AI生成结构化周报</div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-text">你花2分钟<span class="key">检查修改</span>，搞定</div>
+    </div>
+  </div>
+
+  <!-- 底部强调 -->
+  <div class="bottom-emphasis">这5分钟，省不了 —— 因为只有你知道这周发生了什么</div>
+
+  <!-- 底部元数据 -->
+  <div class="meta">00:02:30</div>
+
+  <script>
+    // accent-bar 进场动画结束后切换为呼吸动画
+    const accentBar = document.querySelector('.accent-bar');
+    if (accentBar) {
+      accentBar.addEventListener('animationend', function(e) {
+        if (e.animationName === 'barGrow') {
+          accentBar.style.width = '320px';
+          accentBar.classList.add('breathing');
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>

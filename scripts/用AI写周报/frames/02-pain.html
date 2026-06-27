@@ -1,0 +1,379 @@
+<!-- REVIEW: PASSED -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Frame 02 - 痛点：写周报的痛苦</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter+Tight:wght@400;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #0d0806;
+    overflow: hidden;
+    font-family: 'Noto Sans SC', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  /* 胶片漏光 - 暖橙 */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at top right, rgba(255,181,71,0.25) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom left, rgba(217,119,87,0.15) 0%, transparent 40%),
+      radial-gradient(ellipse at center left, rgba(255,90,44,0.08) 0%, transparent 35%);
+    pointer-events: none;
+    z-index: 1;
+    animation: leakDrift 12s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite alternate;
+  }
+
+  @keyframes leakDrift {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(30px, -20px); }
+  }
+
+  /* 35mm 颗粒噪点 */
+  body::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  /* 暗角 */
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* 顶部标签 */
+  .caption {
+    position: absolute;
+    top: 48px;
+    left: 80px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    opacity: 0;
+    animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards;
+    z-index: 10;
+  }
+
+  /* 时间标签 */
+  .time-label {
+    position: absolute;
+    top: 48px;
+    right: 80px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: rgba(255,255,255,0.25);
+    opacity: 0;
+    animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s forwards;
+    z-index: 10;
+  }
+
+  /* 主场景容器 */
+  .scene {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    max-width: 1400px;
+  }
+
+  /* 场景标题 */
+  .scene-title {
+    font-size: 56px;
+    font-weight: 900;
+    color: #f5e9d6;
+    text-align: center;
+    opacity: 0;
+    min-height: 84px;
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s forwards;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  }
+
+  /* 时间线 */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  .timeline-item:nth-child(1) { animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s forwards; }
+  .timeline-item:nth-child(2) { animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.5s forwards; }
+  .timeline-item:nth-child(3) { animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.5s forwards; }
+  .timeline-item:nth-child(4) { animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4.5s forwards; }
+  .timeline-item:nth-child(5) { animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 5.5s forwards; }
+  .timeline-item:nth-child(6) { animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 6.5s forwards; }
+
+  .timeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff5a2c;
+    margin-top: 8px;
+    flex-shrink: 0;
+    box-shadow: 0 0 12px rgba(255,90,44,0.4);
+    animation: dotPulse 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  }
+
+  @keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(255,90,44,0.4); }
+    50% { box-shadow: 0 0 24px rgba(255,90,44,0.8), 0 0 48px rgba(255,90,44,0.3); }
+  }
+
+  .timeline-content {
+    flex: 1;
+  }
+
+  .timeline-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 6px;
+  }
+
+  .timeline-text {
+    font-size: 24px;
+    font-weight: 500;
+    color: #f5e9d6;
+    line-height: 1.5;
+    min-height: 36px;
+  }
+
+  .timeline-text .highlight {
+    color: #ff5a2c;
+    font-weight: 700;
+  }
+
+  .timeline-text .strike {
+    text-decoration: line-through;
+    text-decoration-color: #ff5a2c;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* 右侧弹幕关键词 */
+  .keywords {
+    position: absolute;
+    right: 100px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 6;
+  }
+
+  .keyword {
+    font-size: 20px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.2);
+    text-align: right;
+    opacity: 0;
+    animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    white-space: nowrap;
+  }
+
+  @keyframes keywordFloat {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(12px); }
+  }
+
+  .keyword:nth-child(1) { animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards, keywordFloat 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.8s infinite alternate; }
+  .keyword:nth-child(2) { animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4s forwards, keywordFloat 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4.8s infinite alternate; }
+  .keyword:nth-child(3) { animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 5s forwards, keywordFloat 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 5.8s infinite alternate; }
+  .keyword:nth-child(4) { color: #ff5a2c; opacity: 0; animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 7s forwards, keywordFloat 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 7.8s infinite alternate; }
+
+  /* 底部金句 */
+  .bottom-quote {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 10;
+    opacity: 0;
+    animation: fadeInUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 8s forwards;
+  }
+
+  .bottom-quote .line1 {
+    font-size: 42px;
+    font-weight: 900;
+    color: #f5e9d6;
+    margin-bottom: 12px;
+    min-height: 63px;
+  }
+
+  .bottom-quote .line1 span {
+    color: #ff5a2c;
+  }
+
+  .bottom-quote .line2 {
+    font-size: 22px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.5);
+    min-height: 33px;
+  }
+
+  /* 胶片划痕 */
+  .scratch {
+    position: absolute;
+    width: 1px;
+    background: rgba(255,255,255,0.08);
+    z-index: 3;
+    pointer-events: none;
+  }
+  .scratch:nth-child(1) { left: 320px; top: 0; height: 100%; }
+  .scratch:nth-child(2) { left: 890px; top: 0; height: 100%; opacity: 0.5; }
+  .scratch:nth-child(3) { left: 1540px; top: 0; height: 100%; opacity: 0.3; }
+
+  /* 底部元数据 */
+  .meta {
+    position: absolute;
+    bottom: 48px;
+    right: 80px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: rgba(255,255,255,0.2);
+    opacity: 0;
+    animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 9s forwards;
+    z-index: 10;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body::before { animation: none !important; }
+    .timeline-item { opacity: 1 !important; animation: none !important; transform: none !important; }
+    .timeline-dot { animation: none !important; }
+    .keyword { opacity: 1 !important; animation: none !important; transform: none !important; }
+    .scene-title, .bottom-quote, .caption, .time-label, .meta { opacity: 1 !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="vignette"></div>
+
+  <!-- 胶片划痕 -->
+  <div class="scratch"></div>
+  <div class="scratch"></div>
+  <div class="scratch"></div>
+
+  <!-- 顶部标签 -->
+  <div class="caption">FRAME 02 · 痛点共鸣</div>
+  <div class="time-label">00:00:15</div>
+
+  <!-- 主场景 -->
+  <div class="scene">
+    <div class="scene-title">周五下午四点，你打开电脑...</div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-time">16:00</div>
+          <div class="timeline-text">打开空白文档，光标闪烁，<span class="highlight">一个字也写不出来</span></div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-time">16:10</div>
+          <div class="timeline-text">翻聊天记录、翻邮件、翻日历 —— 这周到底干了啥？</div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-time">16:30</div>
+          <div class="timeline-text">终于凑齐素材，开始写：<span class="strike">"改了几个bug"</span></div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-time">16:40</div>
+          <div class="timeline-text">改成 <span class="highlight">"修复了多个系统漏洞，提升了稳定性"</span> —— 太假了吧</div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-time">16:50</div>
+          <div class="timeline-text">这种纠结，<span class="highlight">每周都要来一次</span></div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-time">17:00</div>
+          <div class="timeline-text">花了一小时写完，领导<span class="highlight">扫一眼就过了</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧弹幕 -->
+  <div class="keywords">
+    <div class="keyword">太真实了</div>
+    <div class="keyword">被监控了吧</div>
+    <div class="keyword">每周都这样</div>
+    <div class="keyword">我这一小时图啥？</div>
+  </div>
+
+  <!-- 底部金句 -->
+  <div class="bottom-quote">
+    <div class="line1">问题不在你<span>不会写</span></div>
+    <div class="line2">问题在你每周都要重新"想"一遍</div>
+  </div>
+
+  <div class="meta">00:01:15</div>
+
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核心方案1：AI写周报的正确姿势</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            background: #FFFFFF;
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* 分屏容器 */
+        .split-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            position: relative;
+        }
+
+        /* 白色上屏 */
+        .panel-white {
+            width: 100%;
+            height: 540px;
+            background: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 80px;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(-100%);
+            animation: slideDown 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 蓝色下屏 */
+        .panel-blue {
+            width: 100%;
+            height: 540px;
+            background: #2563EB;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 80px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(100%);
+            animation: slideUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 接缝强调条 */
+        .accent-bar {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 8px;
+            background: #0a0a0a;
+            z-index: 3;
+            animation: growBar 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.9s forwards;
+        }
+
+        @keyframes growBar {
+            from {
+                width: 0;
+            }
+            to {
+                width: 320px;
+            }
+        }
+
+        /* 帧标题 */
+        .frame-header {
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            z-index: 4;
+        }
+
+        /* 白色区域内容 */
+        .white-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        /* 流程对比 */
+        .flow-comparison {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            margin-bottom: 40px;
+        }
+
+        .flow-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .flow-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        .flow-wrong {
+            background: rgba(239, 68, 68, 0.1);
+            border: 3px solid #ef4444;
+        }
+
+        .flow-right {
+            background: rgba(34, 197, 94, 0.1);
+            border: 3px solid #22c55e;
+        }
+
+        .flow-label {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1E293B;
+        }
+
+        .flow-desc {
+            font-size: 16px;
+            color: #64748B;
+            text-align: center;
+        }
+
+        .flow-arrow {
+            font-size: 32px;
+            color: #94A3B8;
+        }
+
+        /* 核心金句 */
+        .key-message {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1E293B;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInMessage 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s forwards;
+        }
+
+        @keyframes fadeInMessage {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 蓝色区域内容 */
+        .blue-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .blue-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInBlueTitle 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards;
+        }
+
+        @keyframes fadeInBlueTitle {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 关键词列表 */
+        .keyword-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .keyword-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+
+        .keyword-item:nth-child(1) {
+            animation: fadeInKeyword 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.2s forwards;
+        }
+
+        .keyword-item:nth-child(2) {
+            animation: fadeInKeyword 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.5s forwards;
+        }
+
+        .keyword-item:nth-child(3) {
+            animation: fadeInKeyword 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.8s forwards;
+        }
+
+        .keyword-item:nth-child(4) {
+            animation: fadeInKeyword 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.1s forwards;
+        }
+
+        @keyframes fadeInKeyword {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .keyword-dot {
+            width: 12px;
+            height: 12px;
+            background: #F59E0B;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .keyword-text {
+            font-size: 22px;
+            color: #FFFFFF;
+            font-weight: 500;
+        }
+
+        /* 底部强调 */
+        .bottom-emphasis {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            color: #64748B;
+            z-index: 4;
+            opacity: 0;
+            animation: fadeInEmphasis 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.5s forwards;
+        }
+
+        @keyframes fadeInEmphasis {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Timecode */
+        .timecode {
+            position: absolute;
+            bottom: 40px;
+            right: 60px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #94A3B8;
+            z-index: 4;
+        }
+
+        /* 减少动画模式 */
+        @media (prefers-reduced-motion: reduce) {
+            .panel-white {
+                opacity: 1;
+                transform: none;
+                animation: none;
+            }
+            .panel-blue {
+                opacity: 1;
+                transform: none;
+                animation: none;
+            }
+            .accent-bar {
+                width: 320px;
+                animation: none;
+            }
+            .key-message,
+            .blue-title,
+            .keyword-item,
+            .bottom-emphasis {
+                opacity: 1;
+                transform: none;
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 分屏容器 -->
+    <div class="split-container">
+        <!-- 白色上屏 -->
+        <div class="panel-white">
+            <!-- 帧标题 -->
+            <div class="frame-header">FRAME 03 · METHOD</div>
+
+            <div class="white-content">
+                <!-- 流程对比 -->
+                <div class="flow-comparison">
+                    <div class="flow-item">
+                        <div class="flow-icon flow-wrong">❌</div>
+                        <span class="flow-label">错误方式</span>
+                        <span class="flow-desc">直接让AI写周报</span>
+                    </div>
+
+                    <span class="flow-arrow">→</span>
+
+                    <div class="flow-item">
+                        <div class="flow-icon flow-right">✅</div>
+                        <span class="flow-label">正确方式</span>
+                        <span class="flow-desc">先整理素材再润色</span>
+                    </div>
+                </div>
+
+                <!-- 核心金句 -->
+                <p class="key-message">AI不是帮你"写"，是帮你"润色"</p>
+            </div>
+        </div>
+
+        <!-- 蓝色下屏 -->
+        <div class="panel-blue">
+            <div class="blue-content">
+                <h2 class="blue-title">AI不知道你这周干了啥</h2>
+
+                <!-- 关键词列表 -->
+                <div class="keyword-list">
+                    <div class="keyword-item">
+                        <div class="keyword-dot"></div>
+                        <span class="keyword-text">周一开会</span>
+                    </div>
+                    <div class="keyword-item">
+                        <div class="keyword-dot"></div>
+                        <span class="keyword-text">周三交付方案</span>
+                    </div>
+                    <div class="keyword-item">
+                        <div class="keyword-dot"></div>
+                        <span class="keyword-text">帮同事解决问题</span>
+                    </div>
+                    <div class="keyword-item">
+                        <div class="keyword-dot"></div>
+                        <span class="keyword-text">周五需求评审</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 接缝强调条 -->
+        <div class="accent-bar"></div>
+
+        <!-- 底部强调 -->
+        <div class="bottom-emphasis">这五分钟，省不了——因为只有你知道发生了什么</div>
+
+        <!-- Timecode -->
+        <div class="timecode">00:01:30</div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920, height=1080">
+<title>什么是大语言模型？</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Space+Grotesk:wght@700;900&family=JetBrains+Mono:wght@400;700&family=Inter+Tight:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',sans-serif;background:#06070a;width:1920px;height:1080px;overflow:hidden;user-select:none;-webkit-user-select:none}
+
+/* ═══════ 主舞台 ═══════ */
+.stage{position:relative;width:1920px;height:1080px;overflow:hidden}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;opacity:0;pointer-events:none}
+.scene.active{opacity:1;pointer-events:auto;z-index:2}
+
+/* ═══════ 翻页转场 ═══════ */
+.scene.enter-forward{animation:enterForward 0.45s cubic-bezier(0.16,1,0.3,1) forwards}
+.scene.enter-backward{animation:enterBackward 0.45s cubic-bezier(0.16,1,0.3,1) forwards}
+.scene.leave-forward{animation:leaveForward 0.35s cubic-bezier(0.4,0,0.6,1) forwards}
+.scene.leave-backward{animation:leaveBackward 0.35s cubic-bezier(0.4,0,0.6,1) forwards}
+@keyframes enterForward{from{opacity:0;transform:translateX(60px);filter:blur(6px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
+@keyframes enterBackward{from{opacity:0;transform:translateX(-60px);filter:blur(6px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
+@keyframes leaveForward{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(-40px);filter:blur(4px)}}
+@keyframes leaveBackward{from{opacity:1;transform:translateX(0);filter:blur(0)}to{opacity:0;transform:translateX(40px);filter:blur(4px)}}
+
+/* ═══════ 导航 ═══════ */
+.nav-bar{position:fixed;bottom:48px;left:50%;transform:translateX(-50%);z-index:50;display:flex;gap:12px;align-items:center}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.35s cubic-bezier(0.16,1,0.3,1)}
+.nav-dot.active{background:#fff;width:28px;border-radius:4px;box-shadow:0 0 12px rgba(255,255,255,0.3)}
+.nav-dot:hover{background:rgba(255,255,255,0.5);transform:scale(1.3)}
+.nav-dot:active{transform:scale(0.8)}
+.nav-label{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:50;font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,0.3);letter-spacing:0.12em}
+.nav-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:50;font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.15);letter-spacing:0.08em}
+
+/* ═══════ 共享动画 ═══════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px);filter:blur(6px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes charPop{0%{opacity:0;color:#f5f5f7;transform:translateY(14px);text-shadow:3px 0 #ff3b6f,-3px 0 #00d4ff}40%{opacity:1;color:#f5f5f7;transform:translateY(0);text-shadow:2px 0 #ff3b6f,-2px 0 #00d4ff}100%{opacity:1;color:#f5f5f7;transform:translateY(0);text-shadow:none}}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0.1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(40px);filter:blur(4px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(-60px);filter:blur(6px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(60px);filter:blur(6px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}
+@keyframes scaleReveal{from{opacity:0;transform:scale(0.85);filter:blur(8px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+@keyframes barGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes glitchShift{0%,92%,100%{transform:translate(0)}94%{transform:translate(-3px,1px)}96%{transform:translate(2px,-1px)}98%{transform:translate(-1px,2px)}}
+@keyframes breathe{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.55;transform:scale(1.08)}}
+@keyframes floatUp{from{opacity:0;transform:translateY(60px);filter:blur(10px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+
+/* 通用场景标签 */
+.scene-tag{position:absolute;top:48px;left:80px;font-family:'Inter Tight',monospace;font-size:15px;letter-spacing:0.2em;text-transform:uppercase;z-index:3;opacity:0;color:rgba(255,255,255,0.3)}
+.scene.active .scene-tag{animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.1s forwards}
+
+/* ═══════════════════════════════════════════════
+   SCENE 1 — 钩子
+   ═══════════════════════════════════════════════ */
+#scene1{background:radial-gradient(ellipse at 30% 40%,rgba(255,59,111,0.05) 0%,transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(0,212,255,0.04) 0%,transparent 50%),#06070a}
+#scene1 .s1-main{font-size:160px;font-weight:900;letter-spacing:0.06em;position:relative;z-index:2;display:flex;align-items:center;gap:4px;color:#f5f5f7}
+#scene1 .s1-char{display:inline-block;opacity:0;color:#f5f5f7}
+#scene1.active .s1-char:nth-child(1){animation:charPop 0.45s cubic-bezier(0.16,1,0.3,1) 0.2s forwards}
+#scene1.active .s1-char:nth-child(2){animation:charPop 0.45s cubic-bezier(0.16,1,0.3,1) 0.4s forwards}
+#scene1.active .s1-char:nth-child(3){animation:charPop 0.45s cubic-bezier(0.16,1,0.3,1) 0.6s forwards}
+#scene1.active .s1-char:nth-child(4){animation:charPop 0.45s cubic-bezier(0.16,1,0.3,1) 0.8s forwards}
+#scene1.active .s1-char:nth-child(5){animation:charPop 0.45s cubic-bezier(0.16,1,0.3,1) 1s forwards}
+#scene1.active .s1-char:nth-child(6){animation:charPop 0.45s cubic-bezier(0.16,1,0.3,1) 1.2s forwards}
+#scene1 .s1-cursor{display:inline-block;width:5px;height:115px;background:#ff3b6f;opacity:0;position:relative;margin-left:8px}
+#scene1.active .s1-cursor{animation:fadeIn 0.3s cubic-bezier(0.16,1,0.3,1) 0.4s forwards,cursorBlink 1s ease-in-out 0.8s infinite}
+#scene1 .s1-cursor::after{content:'';position:absolute;top:-24px;left:-70px;width:140px;height:150px;background:radial-gradient(ellipse at center,rgba(255,59,111,0.2),transparent 70%);filter:blur(10px)}
+#scene1 .s1-sub{font-size:28px;color:rgba(255,255,255,0.45);margin-top:40px;z-index:2;opacity:0}
+#scene1.active .s1-sub{animation:fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 2s forwards}
+#scene1 .s1-flare{position:absolute;width:1px;height:180px;pointer-events:none;z-index:0;opacity:0;background:linear-gradient(0deg,transparent,rgba(255,59,111,0.12),transparent)}
+#scene1.active .s1-flare:nth-child(1){animation:fadeIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.8s forwards;top:280px;left:480px;transform:rotate(-30deg)}
+#scene1.active .s1-flare:nth-child(2){animation:fadeIn 0.5s cubic-bezier(0.16,1,0.3,1) 1.2s forwards;top:240px;left:1080px;transform:rotate(25deg)}
+#scene1.active .s1-flare:nth-child(3){animation:fadeIn 0.5s cubic-bezier(0.16,1,0.3,1) 1.5s forwards;top:380px;left:1420px;transform:rotate(-18deg)}
+
+/* ═══════════════════════════════════════════════
+   SCENE 2 — 痛点 (暗底 全宽聊天)
+   ═══════════════════════════════════════════════ */
+#scene2{background:radial-gradient(ellipse at 50% 30%,rgba(255,59,111,0.04) 0%,transparent 60%),#0a0a12}
+#scene2 .s2-container{display:flex;align-items:center;gap:80px;width:1500px;z-index:2}
+#scene2 .s2-chat{flex:1;display:flex;flex-direction:column;gap:16px;min-width:700px}
+/* 关键修复：所有消息默认完全透明，只在动画触发时显示 */
+#scene2 .s2-msg{max-width:90%;padding:16px 24px;border-radius:18px;font-size:24px;line-height:1.5;opacity:0}
+#scene2.active .s2-msg{animation:slideUp 0.45s cubic-bezier(0.16,1,0.3,1) forwards}
+#scene2 .s2-msg.user{align-self:flex-end;background:#2563eb;color:#fff;border-bottom-right-radius:4px}
+#scene2.active .s2-msg.user:nth-child(1){animation-delay:0.15s}
+#scene2.active .s2-msg.user:nth-child(3){animation-delay:1.4s}
+#scene2.active .s2-msg.user:nth-child(6){animation-delay:4.4s}
+#scene2 .s2-msg.ai{align-self:flex-start;background:#1a1a28;color:#d1d5db;border-bottom-left-radius:4px;border:1px solid rgba(255,255,255,0.06)}
+#scene2.active .s2-msg.ai:nth-child(2){animation-delay:0.65s}
+#scene2.active .s2-msg.ai:nth-child(4){animation-delay:2.2s}
+#scene2 .s2-retry{text-align:center;font-family:'JetBrains Mono',monospace;font-size:18px;color:rgba(255,255,255,0.35);opacity:0}
+#scene2.active .s2-retry{animation:fadeIn 0.4s cubic-bezier(0.16,1,0.3,1) 3s forwards}
+#scene2 .s2-conclusion{display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0}
+#scene2.active .s2-conclusion{animation:floatUp 0.7s cubic-bezier(0.16,1,0.3,1) 5.5s forwards}
+#scene2 .s2-conclusion .s2-big{font-size:52px;font-weight:900;color:#f5f5f7}
+#scene2 .s2-conclusion .s2-big em{font-style:normal;color:#ff3b6f}
+#scene2 .s2-conclusion .s2-sub{font-size:24px;color:rgba(255,255,255,0.5)}
+
+/* ═══════════════════════════════════════════════
+   SCENE 3 — 阅卷老师类比 (暗色双面板)
+   ═══════════════════════════════════════════════ */
+#scene3{background:radial-gradient(ellipse at 50% 50%,rgba(67,97,238,0.08) 0%,transparent 70%),#0a0a18;flex-direction:row;padding:0}
+#scene3 .s3-panel{flex:1;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:80px;position:relative}
+#scene3 .s3-top{background:rgba(255,255,255,0.02)}
+#scene3 .s3-bot{background:rgba(67,97,238,0.12)}
+/* 含蓄的分隔线 */
+#scene3 .s3-divider{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:1px;height:200px;background:rgba(255,255,255,0.08);z-index:3;opacity:0}
+#scene3.active .s3-divider{animation:fadeIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.4s forwards}
+#scene3 .s3-icon{font-size:100px;margin-bottom:20px;opacity:0}
+#scene3.active .s3-top .s3-icon{animation:scaleReveal 0.5s cubic-bezier(0.16,1,0.3,1) 0.5s forwards}
+#scene3.active .s3-bot .s3-icon{animation:scaleReveal 0.5s cubic-bezier(0.16,1,0.3,1) 0.5s forwards}
+#scene3 .s3-label{font-size:16px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;font-family:'Inter Tight',sans-serif;margin-bottom:16px;opacity:0}
+#scene3.active .s3-top .s3-label{animation:fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 0.65s forwards;color:rgba(255,255,255,0.5)}
+#scene3.active .s3-bot .s3-label{animation:fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 0.65s forwards;color:rgba(255,255,255,0.5)}
+#scene3 .s3-text{font-size:28px;line-height:1.7;text-align:center;max-width:500px;font-weight:500;opacity:0}
+#scene3.active .s3-top .s3-text{animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.8s forwards;color:rgba(255,255,255,0.85)}
+#scene3.active .s3-bot .s3-text{animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.8s forwards;color:rgba(255,255,255,0.95)}
+
+/* ═══════════════════════════════════════════════
+   SCENE 4 — 幻觉
+   ═══════════════════════════════════════════════ */
+#scene4{background:#070708}
+#scene4 .s4-scan{position:absolute;inset:0;pointer-events:none;z-index:1;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.01) 2px,rgba(255,255,255,0.01) 4px)}
+#scene4 .s4-title-wrap{position:relative;z-index:2;opacity:0}
+#scene4.active .s4-title-wrap{animation:scaleReveal 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s forwards,glitchShift 3.5s ease-in-out 1.5s infinite}
+#scene4 .s4-title{font-family:'Space Grotesk',sans-serif;font-size:120px;font-weight:900;letter-spacing:0.02em;color:#f5f5f7;position:relative}
+#scene4 .s4-ghost-c{position:absolute;top:0;left:3px;color:#00f0ff;opacity:0.5;pointer-events:none;clip-path:inset(30% 0 50% 0)}
+#scene4 .s4-ghost-m{position:absolute;top:0;left:-2px;color:#ff2bd6;opacity:0.5;pointer-events:none;clip-path:inset(50% 0 30% 0)}
+#scene4 .s4-flow{display:flex;align-items:center;gap:14px;margin-top:50px;flex-wrap:wrap;justify-content:center;z-index:2}
+#scene4 .s4-step{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px 24px;font-size:20px;color:rgba(255,255,255,0.65);font-family:'JetBrains Mono',monospace;opacity:0}
+#scene4.active .s4-step:nth-child(1){animation:slideUp 0.35s cubic-bezier(0.16,1,0.3,1) 0.65s forwards}
+#scene4.active .s4-step:nth-child(3){animation:slideUp 0.35s cubic-bezier(0.16,1,0.3,1) 0.78s forwards}
+#scene4.active .s4-step:nth-child(5){animation:slideUp 0.35s cubic-bezier(0.16,1,0.3,1) 0.91s forwards}
+#scene4.active .s4-step:nth-child(7){animation:slideUp 0.35s cubic-bezier(0.16,1,0.3,1) 1.04s forwards}
+#scene4.active .s4-step:nth-child(9){animation:slideUp 0.35s cubic-bezier(0.16,1,0.3,1) 1.17s forwards}
+#scene4 .s4-step.danger{border-color:rgba(255,45,85,0.4);color:#ff2d55;background:rgba(255,45,85,0.08)}
+#scene4 .s4-arrow{color:rgba(255,255,255,0.18);font-size:18px;opacity:0}
+#scene4.active .s4-arrow:nth-child(2){animation:fadeIn 0.25s cubic-bezier(0.16,1,0.3,1) 0.7s forwards}
+#scene4.active .s4-arrow:nth-child(4){animation:fadeIn 0.25s cubic-bezier(0.16,1,0.3,1) 0.83s forwards}
+#scene4.active .s4-arrow:nth-child(6){animation:fadeIn 0.25s cubic-bezier(0.16,1,0.3,1) 0.96s forwards}
+#scene4.active .s4-arrow:nth-child(8){animation:fadeIn 0.25s cubic-bezier(0.16,1,0.3,1) 1.09s forwards}
+#scene4 .s4-warn{font-size:22px;color:#ff2d55;margin-top:32px;z-index:2;opacity:0;font-weight:500}
+#scene4.active .s4-warn{animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 1.5s forwards}
+
+/* ═══════════════════════════════════════════════
+   SCENE 5 — 三个原则 (暗底 poster 风格)
+   ═══════════════════════════════════════════════ */
+#scene5{background:radial-gradient(ellipse at 50% 50%,rgba(216,0,15,0.05) 0%,transparent 70%),#0c0c14}
+#scene5 .s5-cards{display:flex;gap:50px;z-index:2}
+#scene5 .s5-card{width:400px;text-align:center;opacity:0}
+#scene5.active .s5-card:nth-child(1){animation:floatUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s forwards}
+#scene5.active .s5-card:nth-child(2){animation:floatUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.4s forwards}
+#scene5.active .s5-card:nth-child(3){animation:floatUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.65s forwards}
+#scene5 .s5-num{font-family:'Space Grotesk',sans-serif;font-size:96px;font-weight:900;color:#ff4455 /* REVIEW: 原 #D8000F 在暗底上对比度不足，提亮至 #ff4455 确保可读 */;line-height:1;margin-bottom:16px}
+#scene5 .s5-title{font-size:28px;font-weight:900;color:#f5f5f7;margin-bottom:12px}
+#scene5 .s5-desc{font-size:20px;color:rgba(255,255,255,0.55);line-height:1.7}
+#scene5 .s5-foot{position:absolute;bottom:120px;font-size:20px;color:rgba(255,255,255,0.35);z-index:2;opacity:0}
+#scene5.active .s5-foot{animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 1.2s forwards}
+
+/* ═══════════════════════════════════════════════
+   SCENE 6 — 对比演示 (暗色渐变分屏)
+   ═══════════════════════════════════════════════ */
+#scene6{background:linear-gradient(90deg,#1a1a40 0%,#1a1a40 48%,#0d0d18 52%,#0d0d18 100%);flex-direction:row;padding:0}
+#scene6 .s6-panel{flex:1;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px;position:relative;opacity:0}
+#scene6 .s6-left{background:transparent}
+#scene6.active .s6-left{animation:slideLeft 0.45s cubic-bezier(0.16,1,0.3,1) 0.1s forwards}
+#scene6 .s6-right{background:transparent}
+#scene6.active .s6-right{animation:slideRight 0.45s cubic-bezier(0.16,1,0.3,1) 0.25s forwards}
+#scene6 .s6-label{font-family:'Inter Tight',monospace;font-size:18px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:20px;opacity:0}
+#scene6.active .s6-left .s6-label{animation:fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) 0.5s forwards;color:rgba(255,255,255,0.5)}
+#scene6.active .s6-right .s6-label{animation:fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) 0.5s forwards;color:rgba(255,255,255,0.4)}
+#scene6 .s6-box{width:480px;border-radius:10px;padding:22px;font-size:22px /* REVIEW: 原 20px 在演示大屏上偏小，增大到 22px */;line-height:1.6;opacity:0;margin-bottom:18px}
+#scene6 .s6-box.input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1)}
+#scene6 .s6-left .s6-box.input{color:rgba(255,255,255,0.8)}
+#scene6 .s6-right .s6-box.input{color:#86efac}
+#scene6 .s6-box.output{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+#scene6 .s6-left .s6-box.output{color:rgba(255,255,255,0.6)}
+#scene6 .s6-right .s6-box.output{color:rgba(255,255,255,0.85);border-color:rgba(134,239,172,0.15)}
+#scene6.active .s6-left .s6-box:nth-child(2){animation:fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) 0.6s forwards}
+#scene6.active .s6-left .s6-box:nth-child(3){animation:fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) 0.8s forwards}
+#scene6.active .s6-right .s6-box:nth-child(2){animation:fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) 0.6s forwards}
+#scene6.active .s6-right .s6-box:nth-child(3){animation:fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) 0.8s forwards}
+/* VS 徽章固定在页面50%位置 */
+#scene6 .s6-vs{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;width:56px;height:56px;background:#ff3b6f;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#fff;opacity:0;box-shadow:0 0 28px rgba(255,59,111,0.35)}
+#scene6.active .s6-vs{animation:scaleReveal 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.9s forwards}
+
+/* ═══════════════════════════════════════════════
+   SCENE 7 — 总结
+   ═══════════════════════════════════════════════ */
+#scene7{background:linear-gradient(135deg,#0a0a14 0%,#1a1030 50%,#0a0a14 100%)}
+#scene7 .s7-orb{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0}
+#scene7 .s7-orb:nth-child(1){width:500px;height:500px;background:rgba(255,59,111,0.05);top:-100px;left:-100px;animation:breathe 6s ease-in-out infinite}
+#scene7 .s7-orb:nth-child(2){width:400px;height:400px;background:rgba(0,212,255,0.03);bottom:-80px;right:-80px;animation:breathe 8s ease-in-out 2s infinite}
+#scene7 .s7-orb:nth-child(3){width:300px;height:300px;background:rgba(124,92,255,0.04);top:50%;left:50%;transform:translate(-50%,-50%);animation:breathe 7s ease-in-out 1s infinite}
+#scene7 .s7-cards{display:flex;gap:28px;z-index:2;margin-bottom:40px}
+#scene7 .s7-card{width:340px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:30px 26px;text-align:center;opacity:0}
+#scene7.active .s7-card:nth-child(1){animation:floatUp 0.45s cubic-bezier(0.16,1,0.3,1) 0.15s forwards}
+#scene7.active .s7-card:nth-child(2){animation:floatUp 0.45s cubic-bezier(0.16,1,0.3,1) 0.4s forwards}
+#scene7.active .s7-card:nth-child(3){animation:floatUp 0.45s cubic-bezier(0.16,1,0.3,1) 0.65s forwards}
+#scene7 .s7-card .s7-icon{font-size:40px;margin-bottom:14px}
+#scene7 .s7-card .s7-title{font-size:22px;font-weight:700;margin-bottom:8px;color:#f5f5f7}
+#scene7 .s7-card .s7-desc{font-size:17px;color:rgba(255,255,255,0.5);line-height:1.7}
+#scene7 .s7-quote{font-size:46px;font-weight:900;z-index:2;opacity:0;text-align:center;background:linear-gradient(90deg,#ff3b6f,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
+#scene7.active .s7-quote{animation:scaleReveal 0.7s cubic-bezier(0.16,1,0.3,1) 1s forwards}
+#scene7 .s7-cta{font-size:22px;color:rgba(255,255,255,0.5);z-index:2;opacity:0;margin-bottom:36px}
+#scene7.active .s7-cta{animation:fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 1.3s forwards}
+#scene7 .s7-next{font-size:16px;color:rgba(255,255,255,0.3);z-index:2;opacity:0;font-family:'Inter Tight',sans-serif;letter-spacing:0.06em}
+#scene7.active .s7-next{animation:fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 1.6s forwards}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+<!-- 1. 钩子 -->
+<div class="scene active" id="scene1">
+<div class="scene-tag">Frame 01 · 开场钩子</div>
+<div class="s1-flare"></div><div class="s1-flare"></div><div class="s1-flare"></div>
+<div class="s1-main"><span class="s1-char">它</span><span class="s1-char">根</span><span class="s1-char">本</span><span class="s1-char">没</span><span class="s1-char">记</span><span class="s1-char">住</span><span class="s1-cursor"></span></div>
+<div class="s1-sub">ChatGPT 是怎么"记住"你前面说的话的？</div>
+</div>
+
+<!-- 2. 痛点 -->
+<div class="scene" id="scene2">
+<div class="scene-tag">Frame 02 · 痛点共鸣</div>
+<div class="s2-container">
+<div class="s2-chat">
+<div class="s2-msg user">帮我写一段产品介绍</div>
+<div class="s2-msg ai">我们的产品采用先进技术方案，致力于打造卓越的用户体验……</div>
+<div class="s2-msg user">太泛了，重写，具体一点</div>
+<div class="s2-msg ai">本产品以创新为驱动，通过深度优化赋能用户实现目标……</div>
+<div class="s2-retry">— 反复修改 5 次 —</div>
+<div class="s2-msg user">算了……这 AI 是不是听不懂人话</div>
+</div>
+<div class="s2-conclusion">
+<div class="s2-big">问题不在 <em>AI</em></div>
+<div class="s2-sub">问题在你对它的理解</div>
+</div>
+</div>
+</div>
+
+<!-- 3. 阅卷老师 -->
+<div class="scene" id="scene3">
+<div class="scene-tag">Frame 03 · 它到底在做什么？</div>
+<div class="s3-panel s3-top">
+<div class="s3-icon">📝</div>
+<div class="s3-label">想象你是</div>
+<div class="s3-text">一个阅卷老师<br>面前有一份没写完的试卷<br>你的任务：补全最后一道大题</div>
+</div>
+<div class="s3-divider"></div>
+<div class="s3-panel s3-bot">
+<div class="s3-icon">🤖</div>
+<div class="s3-label">大语言模型就是</div>
+<div class="s3-text">一个看过几亿份试卷的老师<br>根据你给的东西<br>猜接下来最可能是什么</div>
+</div>
+</div>
+
+<!-- 4. 幻觉 -->
+<div class="scene" id="scene4">
+<div class="scene-tag">Frame 04 · 为什么会这样？</div>
+<div class="s4-scan"></div>
+<div class="s4-title-wrap"><span class="s4-title">幻觉</span><span class="s4-ghost-c">幻觉</span><span class="s4-ghost-m">幻觉</span></div>
+<div class="s4-flow">
+<div class="s4-step">提出问题</div><span class="s4-arrow">→</span>
+<div class="s4-step">搜索训练数据</div><span class="s4-arrow">→</span>
+<div class="s4-step">没找到答案</div><span class="s4-arrow">→</span>
+<div class="s4-step danger">必须回答</div><span class="s4-arrow">→</span>
+<div class="s4-step danger">编一个</div>
+</div>
+<div class="s4-warn">⚠ 你分不清它什么时候是真的，什么时候是编的</div>
+</div>
+
+<!-- 5. 三个原则 -->
+<div class="scene" id="scene5">
+<div class="scene-tag">Frame 05 · 该怎么用？</div>
+<div class="s5-cards">
+<div class="s5-card"><div class="s5-num">1</div><div class="s5-title">不问事实</div><div class="s5-desc">别问它发生没发生过的事<br>让它做"模式匹配"<br>而不是"知识检索"</div></div>
+<div class="s5-card"><div class="s5-num">2</div><div class="s5-title">给足上下文</div><div class="s5-desc">它每次都重读你之前的对话<br>你说得越清楚<br>它猜得越准</div></div>
+<div class="s5-card"><div class="s5-num">3</div><div class="s5-title">当实习生用</div><div class="s5-desc">别当专家提问<br>当成聪明的实习生<br>指令越具体 结果越好</div></div>
+</div>
+<div class="s5-foot">从原理推导出来的使用法则，不是网上抄的</div>
+</div>
+
+<!-- 6. 对比演示 -->
+<div class="scene" id="scene6">
+<div class="scene-tag">Frame 06 · 对比演示</div>
+<div class="s6-panel s6-left">
+<div class="s6-label">模糊的 Prompt</div>
+<div class="s6-box input">"帮我写一个产品介绍"</div>
+<div class="s6-box output">本产品以卓越品质为核心，提供全方位的解决方案……</div>
+</div>
+<div class="s6-vs">VS</div>
+<div class="s6-panel s6-right">
+<div class="s6-label">具体的 Prompt ✓</div>
+<div class="s6-box input">我是手工咖啡店主，客户是25-35岁上班族，注重品质但没时间。帮我写100字产品介绍，语气亲切不油腻</div>
+<div class="s6-box output">每天早上，一杯好咖啡不该等太久。我们花了三年，只做一件事：让手工咖啡和冲速溶一样快……</div>
+</div>
+</div>
+
+<!-- 7. 总结 -->
+<div class="scene" id="scene7">
+<div class="scene-tag">Frame 07 · 总结</div>
+<div class="s7-orb"></div><div class="s7-orb"></div><div class="s7-orb"></div>
+<div class="s7-cards">
+<div class="s7-card"><div class="s7-icon">📝</div><div class="s7-title">它不"懂"</div><div class="s7-desc">它的任务是补全<br>不是理解或思考</div></div>
+<div class="s7-card"><div class="s7-icon">🎲</div><div class="s7-title">它只会"猜"</div><div class="s7-desc">每次回答都是对最可能的下文做的一次猜测</div></div>
+<div class="s7-card"><div class="s7-icon">⚠️</div><div class="s7-title">它必须"编"</div><div class="s7-desc">遇到不知道的不能沉默<br>只能编一个像样的</div></div>
+</div>
+<div class="s7-quote">AI 不是来取代你的，是来放大你的</div>
+<div class="s7-cta">但你先得懂它，它才能帮你</div>
+<div class="s7-next">AI 入门系列 · 第 1 期 &nbsp;|&nbsp; 下一期：怎么写 Prompt</div>
+</div>
+
+</div>
+
+<div class="nav-label" id="navLabel">1 / 7</div>
+<nav class="nav-bar" id="navBar">
+<div class="nav-dot active" data-index="0"></div>
+<div class="nav-dot" data-index="1"></div>
+<div class="nav-dot" data-index="2"></div>
+<div class="nav-dot" data-index="3"></div>
+<div class="nav-dot" data-index="4"></div>
+<div class="nav-dot" data-index="5"></div>
+<div class="nav-dot" data-index="6"></div>
+</nav>
+<div class="nav-hint">点击页面 或 →↓空格 翻页  |  ←↑ 返回  |  圆点跳转</div>
+
+<script>
+const scenes=document.querySelectorAll('.scene'),dots=document.querySelectorAll('.nav-dot'),navLabel=document.getElementById('navLabel'),total=scenes.length;
+let current=0,locked=!1;
+function resetAnimations(e){e.classList.remove('active','enter-forward','enter-backward','leave-forward','leave-backward');void e.offsetWidth}
+function goTo(e,t){if(locked||e===current||e<0||e>=total)return;
+let o=e>current,i=scenes[current],n=scenes[e];locked=!0;
+i.classList.add(o?'leave-forward':'leave-backward');i.classList.remove('active');
+resetAnimations(n);n.classList.add(o?'enter-forward':'enter-backward');n.classList.add('active');
+dots[current].classList.remove('active');dots[e].classList.add('active');
+navLabel.textContent=(e+1)+' / '+total;current=e;
+setTimeout(()=>{i.classList.remove('leave-forward','leave-backward');n.classList.remove('enter-forward','enter-backward');locked=!1},500)}
+function next(){goTo(current+1,!0)}function prev(){goTo(current-1,!1)}
+document.addEventListener('click',e=>{if(e.target.classList.contains('nav-dot'))return;next()});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();next()}else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();prev()}});
+dots.forEach(e=>{e.addEventListener('click',t=>{t.stopPropagation();let o=parseInt(e.dataset.index);goTo(o,o>current)})});
+resetAnimations(scenes[0]);scenes[0].classList.add('active');
+
+// ═══════ 自动播放模式 ═══════
+// 每段音频时长（秒），录制时自动按此翻页
+const SCENE_DURATIONS = [11.5, 25.3, 29.9, 29.4, 35.2, 31.5, 22.4];
+let autoPlayTimer = null;
+
+function startAutoPlay() {
+  // 隐藏导航UI
+  document.querySelector('.nav-bar').style.display = 'none';
+  document.querySelector('.nav-label').style.display = 'none';
+  document.querySelector('.nav-hint').style.display = 'none';
+
+  function scheduleNext() {
+    if (current >= total - 1) {
+      // 最后一页播完，通知 Playwright
+      window.__autoPlayDone = true;
+      return;
+    }
+    const delay = SCENE_DURATIONS[current] * 1000;
+    autoPlayTimer = setTimeout(() => {
+      next();
+      setTimeout(scheduleNext, 600); // 等转场动画完成
+    }, delay);
+  }
+  scheduleNext();
+}
+
+// URL 带 ?autoplay=1 时自动启动
+if (location.search.includes('autoplay=1')) {
+  setTimeout(startAutoPlay, 500);
+}
+
+// Playwright 可通过 page.evaluate('startAutoPlay()') 触发
+</script>
+</body>
+</html>

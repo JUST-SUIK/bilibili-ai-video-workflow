@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>总结 + CTA</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            background: #08090c;
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* Vignette效果 */
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+            pointer-events: none;
+        }
+
+        /* 主容器 */
+        .outro-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            padding: 60px;
+        }
+
+        /* 顶部ribbon */
+        .top-ribbon {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #3B82F6, #8B5CF6);
+            z-index: 2;
+        }
+
+        /* Logo区域 */
+        .logo-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+
+        /* Logo几何块 */
+        .logo-blocks {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .logo-block {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .block-1 {
+            top: 0;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: #3B82F6;
+            border-radius: 8px;
+            animation: assembleBlock 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
+        }
+
+        .block-2 {
+            top: 10px;
+            right: 20px;
+            width: 35px;
+            height: 35px;
+            background: #8B5CF6;
+            border-radius: 50%;
+            animation: assembleBlock 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s forwards;
+        }
+
+        .block-3 {
+            bottom: 20px;
+            left: 10px;
+            width: 30px;
+            height: 50px;
+            background: #F59E0B;
+            border-radius: 6px;
+            animation: assembleBlock 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards;
+        }
+
+        .block-4 {
+            bottom: 10px;
+            right: 10px;
+            width: 45px;
+            height: 25px;
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+            border-radius: 12px;
+            animation: assembleBlock 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s forwards;
+        }
+
+        .block-5 {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: #FFFFFF;
+            border-radius: 4px;
+            animation: assembleBlock 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s forwards;
+        }
+
+        @keyframes assembleBlock {
+            0% {
+                opacity: 0;
+                transform: translate(var(--from-x, 0), var(--from-y, 0)) scale(1.4);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        .block-1 { --from-x: -60px; --from-y: -40px; }
+        .block-2 { --from-x: 60px; --from-y: -30px; }
+        .block-3 { --from-x: -50px; --from-y: 50px; }
+        .block-4 { --from-x: 70px; --from-y: 40px; }
+        .block-5 { --from-x: 0; --from-y: -80px; }
+
+        /* Logo glow */
+        .logo-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            animation: glowBloom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s forwards;
+        }
+
+        @keyframes glowBloom {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        /* Logo shimmer */
+        .logo-shimmer {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmerSweep 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.0s forwards;
+        }
+
+        @keyframes shimmerSweep {
+            from {
+                left: -100%;
+            }
+            to {
+                left: 100%;
+            }
+        }
+
+        /* 品牌名 */
+        .brand-name {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            font-size: 56px;
+            font-weight: 700;
+            color: #FFFFFF;
+            letter-spacing: -0.02em;
+            opacity: 0;
+            animation: fadeInBrand 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.4s forwards;
+        }
+
+        @keyframes fadeInBrand {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Tagline */
+        .tagline {
+            font-size: 24px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 16px;
+            opacity: 0;
+            animation: fadeInTagline 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards;
+        }
+
+        @keyframes fadeInTagline {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 核心观点卡片 */
+        .core-message {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px 60px;
+            margin-bottom: 50px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInMessage 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.2s forwards;
+        }
+
+        @keyframes fadeInMessage {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 20px;
+        }
+
+        .message-highlight {
+            color: #F59E0B;
+        }
+
+        .message-desc {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        /* 三个模板回顾 */
+        .template-recap {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .recap-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .recap-item:nth-child(1) {
+            animation: fadeInRecap 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.8s forwards;
+        }
+
+        .recap-item:nth-child(2) {
+            animation: fadeInRecap 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.0s forwards;
+        }
+
+        .recap-item:nth-child(3) {
+            animation: fadeInRecap 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.2s forwards;
+        }
+
+        @keyframes fadeInRecap {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .recap-number {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .recap-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: #FFFFFF;
+        }
+
+        /* CTA区域 */
+        .cta-area {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .cta-button {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            opacity: 0;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .cta-save {
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+            color: #FFFFFF;
+            animation: fadeInCTA 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.5s forwards;
+        }
+
+        .cta-save:hover {
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+        }
+
+        .cta-comment {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInCTA 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.7s forwards;
+        }
+
+        .cta-comment:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .cta-follow {
+            background: #F59E0B;
+            color: #1E293B;
+            animation: fadeInCTA 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.9s forwards;
+        }
+
+        .cta-follow:hover {
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+        }
+
+        @keyframes fadeInCTA {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cta-icon {
+            font-size: 24px;
+        }
+
+        /* 下期预告 */
+        .next-preview {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeInPreview 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4.2s forwards;
+        }
+
+        @keyframes fadeInPreview {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .preview-highlight {
+            color: #F59E0B;
+            font-weight: 600;
+        }
+
+        /* 底部元数据 */
+        .footer-meta {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 0 60px;
+            opacity: 0;
+            animation: fadeInMeta 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4.5s forwards;
+        }
+
+        @keyframes fadeInMeta {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .meta-item {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+        }
+
+        .meta-divider {
+            width: 1px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 系列标识 */
+        .series-badge {
+            position: absolute;
+            bottom: 80px;
+            right: 60px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            opacity: 0;
+            animation: fadeInBadge 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4.8s forwards;
+        }
+
+        @keyframes fadeInBadge {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: #F59E0B;
+            border-radius: 50%;
+        }
+
+        .badge-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* 减少动画模式 */
+        @media (prefers-reduced-motion: reduce) {
+            .logo-block {
+                opacity: 1;
+                animation: none;
+                transform: none;
+            }
+            .logo-glow,
+            .brand-name,
+            .tagline,
+            .core-message,
+            .recap-item,
+            .cta-button,
+            .next-preview,
+            .footer-meta,
+            .series-badge {
+                opacity: 1;
+                animation: none;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Vignette -->
+    <div class="vignette"></div>
+
+    <!-- 顶部ribbon -->
+    <div class="top-ribbon"></div>
+
+    <!-- 主容器 -->
+    <div class="outro-container">
+        <!-- Logo区域 -->
+        <div class="logo-area">
+            <div class="logo-blocks">
+                <div class="logo-glow"></div>
+                <div class="logo-block block-1"></div>
+                <div class="logo-block block-2"></div>
+                <div class="logo-block block-3"></div>
+                <div class="logo-block block-4"></div>
+                <div class="logo-block block-5"></div>
+                <div class="logo-shimmer"></div>
+            </div>
+            <h1 class="brand-name">AI学习之路</h1>
+            <p class="tagline">让AI成为你的效率引擎</p>
+        </div>
+
+        <!-- 核心观点卡片 -->
+        <div class="core-message">
+            <h2 class="message-title">
+                你负责<span class="message-highlight">回忆</span>，AI负责<span class="message-highlight">表达</span>
+            </h2>
+            <p class="message-desc">
+                先把素材整理好，再让AI润色——这就是AI写周报的核心方法
+            </p>
+        </div>
+
+        <!-- 三个模板回顾 -->
+        <div class="template-recap">
+            <div class="recap-item">
+                <div class="recap-number">1</div>
+                <span class="recap-text">基础版模板</span>
+            </div>
+            <div class="recap-item">
+                <div class="recap-number">2</div>
+                <span class="recap-text">项目版模板</span>
+            </div>
+            <div class="recap-item">
+                <div class="recap-number">3</div>
+                <span class="recap-text">问题解决版模板</span>
+            </div>
+        </div>
+
+        <!-- CTA区域 -->
+        <div class="cta-area">
+            <div class="cta-button cta-save">
+                <span class="cta-icon">⭐</span>
+                <span>收藏下次用</span>
+            </div>
+            <div class="cta-button cta-comment">
+                <span class="cta-icon">💬</span>
+                <span>评论区聊聊</span>
+            </div>
+            <div class="cta-button cta-follow">
+                <span class="cta-icon">👆</span>
+                <span>关注看下期</span>
+            </div>
+        </div>
+
+        <!-- 下期预告 -->
+        <p class="next-preview">
+            下期预告：<span class="preview-highlight">怎么用AI写日报和月报</span>
+        </p>
+
+        <!-- 底部元数据 -->
+        <div class="footer-meta">
+            <span class="meta-item">AI学习之路</span>
+            <div class="meta-divider"></div>
+            <span class="meta-item">2026</span>
+            <div class="meta-divider"></div>
+            <span class="meta-item">效率工具系列</span>
+        </div>
+
+        <!-- 系列标识 -->
+        <div class="series-badge">
+            <div class="badge-dot"></div>
+            <span class="badge-text">EP.01 · AI写周报</span>
+        </div>
+    </div>
+</body>
+</html>

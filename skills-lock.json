@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "skills": {
+    "dot-skill": {
+      "source": "titanwings/colleague-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "0335e11d26b5185a7a870655ff02f27ac6601d1e7662cdd8659a4eda565bb344"
+    },
+    "frame-bold-poster": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-bold-poster/SKILL.md",
+      "computedHash": "bb2ed57e0dab530d057826ce613f0771a797b92c78cb6cc7b56652995e900cc0"
+    },
+    "frame-bold-signal": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-bold-signal/SKILL.md",
+      "computedHash": "0efa7b0d193987e1d50fd72d99542da9d93d987a5098d39c61735a4e19007462"
+    },
+    "frame-build-minimal": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-build-minimal/SKILL.md",
+      "computedHash": "7fbe09954240bd3a4b031deefeeda46e2ed3bb25bbe7a26a650cb681c556964d"
+    },
+    "frame-creative-voltage": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-creative-voltage/SKILL.md",
+      "computedHash": "85b3441f8561e1da1d6e2b70ab9905d41c5c8f7aa6016d971267d156ff785d31"
+    },
+    "frame-data-chart-nyt": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-data-chart-nyt/SKILL.md",
+      "computedHash": "9f3457ce594cda09ec924ee5257e8386fdfdbb865e16147fa082bd2a2aebadb2"
+    },
+    "frame-data-rollup": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-data-rollup/SKILL.md",
+      "computedHash": "b212e7a451888499fdbddee6ba7d837e725987f0a2c684e2620d1804f17e9cfd"
+    },
+    "frame-electric-studio": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-electric-studio/SKILL.md",
+      "computedHash": "a4cc64c5ca46b14138e7a920b0ca725197a5b7f669c372500949c4706b20c5ba"
+    },
+    "frame-glitch-title": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-glitch-title/SKILL.md",
+      "computedHash": "1cc831b9d1be84ff36bce454deaa0577bba17e8cc4ca7eadca9d2897f93c1082"
+    },
+    "frame-light-leak-cinema": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-light-leak-cinema/SKILL.md",
+      "computedHash": "03340a9146224df4f4ffd4b23293b6193ad2a5bf873ea9c5a94b66b4f802e837"
+    },
+    "frame-liquid-bg-hero": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-liquid-bg-hero/SKILL.md",
+      "computedHash": "78addd1c19251c4942038f040056cf897a7980ddc32def117786e108991cecfe"
+    },
+    "frame-logo-outro": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-logo-outro/SKILL.md",
+      "computedHash": "d6a576d961543da1a27591cef74b015375eed0267101627b42e2a6a5454b9d32"
+    },
+    "frame-pentagram-stat": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-pentagram-stat/SKILL.md",
+      "computedHash": "21c13ae5a502bf9b05a71a4bab5c5d8bd89e073238ebe45fef97569199db7a26"
+    },
+    "frame-takram-organic": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/frame-takram-organic/SKILL.md",
+      "computedHash": "623b34e592924cd1c5f03f4a486c419d66324d562283c3b06edc49e8d7d8cad8"
+    },
+    "vfx-text-cursor": {
+      "source": "nexu-io/html-video",
+      "sourceType": "github",
+      "skillPath": "templates/vfx-text-cursor/SKILL.md",
+      "computedHash": "c718e459a65a994fb3f4d0259f72db17b37b33759706811b59df7d3c5b4c39de"
+    }
+  }
+}

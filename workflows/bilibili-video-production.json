@@ -1,0 +1,728 @@
+{
+  "id": "bilibili-video-production",
+  "name": "bilibili-video-production",
+  "description": "B站AI知识分享视频制作全流程。6阶段各配独立审查Agent+5次重试自动升级。HTML帧+TTS并行生产。父级编排Agent生成Production Brief共享上下文。v1.2整合踩坑记录：暗色统一、字体≥18px、动画同步、音色个性、白屏修复、中文路径处理。",
+  "version": "1.2.0",
+  "nodes": [
+    {
+      "id": "start-1",
+      "type": "start",
+      "name": "start",
+      "position": { "x": 100, "y": 350 },
+      "data": { "label": "开始制作视频" }
+    },
+    {
+      "id": "g1-topic",
+      "type": "group",
+      "name": "topic-group",
+      "position": { "x": 280, "y": 100 },
+      "style": { "width": 620, "height": 450 },
+      "data": { "label": "1.选题策划" }
+    },
+    {
+      "id": "prompt-topic",
+      "type": "prompt",
+      "name": "topic-input",
+      "parentId": "g1-topic",
+      "position": { "x": 40, "y": 50 },
+      "data": {
+        "label": "输入视频主题意向",
+        "prompt": "请确认你想制作的视频主题方向。\n\n你可以从选题库中选择（docs/02-选题方向.md，含21个选题），或提出新选题。\n\n选题库覆盖：入门科普(9题)、实战教程(8题)、深度分析(4题)。\n\n输入你的选题意向：",
+        "variables": { "topic": "" }
+      }
+    },
+    {
+      "id": "agent-trending",
+      "type": "subAgent",
+      "name": "trending-analysis",
+      "parentId": "g1-topic",
+      "position": { "x": 40, "y": 200 },
+      "data": {
+        "description": "分析B站当下AI知识区热榜趋势",
+        "agentDefinition": "分析B站AI知识区的热榜趋势，为选题提供市场维度参考。",
+        "prompt": "分析B站AI知识区的当下热榜趋势，为选题提供参考。\n\n## 分析维度\n1. 近期热门的AI话题和标签\n2. 内容缺口：哪些方向需求大但供给少\n3. 选题建议：结合用户意向给2-3个具体建议\n\n## 输出\n- **热门趋势**（3-5个）\n- **内容缺口**（2-3个）\n- **选题建议**（2-3个，含热度预估：高/中/低）",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-match",
+      "type": "subAgent",
+      "name": "topic-library-match",
+      "parentId": "g1-topic",
+      "position": { "x": 40, "y": 350 },
+      "data": {
+        "description": "读取选题库匹配最佳选题",
+        "agentDefinition": "读取docs/02-选题方向.md选题库，结合热榜分析推荐最佳选题。",
+        "prompt": "请读取 docs/02-选题方向.md 和 docs/01-项目总览.md，结合热榜分析结果推荐最佳选题。\n\n## 输出\n- **推荐选题**（3个，标注优先级和所属系列）\n- **首选题**：最终推荐及完整理由\n- **制作要点**：核心卖点和注意事项",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-topic",
+      "type": "askUserQuestion",
+      "name": "topic-confirm",
+      "parentId": "g1-topic",
+      "position": { "x": 250, "y": 380 },
+      "data": {
+        "questionText": "确认最终选题？",
+        "options": [
+          { "label": "确认，开始制作", "description": "采用AI推荐的选题", "id": "opt-topic-ok" },
+          { "label": "我另外指定", "description": "我自己指定选题标题", "id": "opt-topic-custom" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "prompt-topic-final",
+      "type": "prompt",
+      "name": "topic-custom",
+      "parentId": "g1-topic",
+      "position": { "x": 330, "y": 200 },
+      "data": {
+        "label": "指定选题",
+        "prompt": "请输入你要制作的具体选题标题和方向：",
+        "variables": { "topic": "" }
+      }
+    },
+    {
+      "id": "g2-orch",
+      "type": "group",
+      "name": "orch-group",
+      "position": { "x": 930, "y": 100 },
+      "style": { "width": 420, "height": 450 },
+      "data": { "label": "2.父级编排" }
+    },
+    {
+      "id": "agent-orchestrator",
+      "type": "subAgent",
+      "name": "parent-orchestrator",
+      "parentId": "g2-orch",
+      "position": { "x": 30, "y": 80 },
+      "data": {
+        "description": "读取项目文档生成Production Brief共享上下文",
+        "agentDefinition": "父级编排Agent：读取项目文档生成一份Production Brief，作为所有下游Agent的共享上下文。不替代各Agent自身的prompt，只提供项目级的统一参考信息。",
+        "prompt": "你负责生成一份Production Brief，作为下游所有Agent的共享参考上下文。\n\n## 必须读取\n1. docs/01-项目总览.md — 账号定位和策略\n2. docs/02-选题方向.md — 选题库\n3. docs/04-视频制作流程.md — 技术路线\n4. docs/06-脚本大纲模板.md — 脚本规范\n5. docs/研究-脚本写作方法论.md — HPSV等方法论\n6. docs/workflow-video-production.md — ⚠️ 踩坑记录和设计规范（必须读取）\n7. scripts/[视频名]/style-guide.md — 视觉风格指南\n8. scripts/[视频名]/voice-prompt.md — 音色设计提示词\n9. scripts/01-什么是大语言模型/ — 参考案例\n\n## 输出：Production Brief（不超过800字）\n### 项目摘要\n- 频道定位、目标受众、内容风格\n\n### 本次选题\n- 选定主题、所属系列、目标时长\n\n### 关键约束（来自踩坑记录）\n- HPSV结构要求、爆点密度(≥4个)\n- HTML动画帧路线（14个可用模板）\n- **全片统一暗色风格**，禁止白色/浅色页面\n- **字体最小18px**，禁止使用Inter字体\n- **动画延迟匹配音频**，文字不能比旁白先出现\n- MiMo TTS音色设计路线（voicedesign模型，有个性有口音）\n- **每段音频加1.5s静音间隔**\n- 不露脸，动画+旁白形式\n\n### 阶段速览\n- 脚本阶段：注意HPSV结构完整性\n- 旁白规划：7-10个画面段落，每段40-90秒\n- HTML帧：每帧1920x1080，独立HTML文件，暗色风格\n- TTS：每段独立WAV，音色设计（非声纹克隆），1.5s静音间隔\n- 合成：Playwright录制(color_scheme=dark)+ffmpeg(临时目录处理中文路径)\n- 发布：B站创作中心上传，科技分区\n\n### 注意事项\n- 参考案例路径：scripts/01-什么是大语言模型/\n- 输出目录：scripts/[视频名]/\n- 所有Agent需维护输出产物清单\n- 每次修改HTML后必须视觉审查（visual-review技能）\n\n输出完成后标注：BRIEF_READY。\n\n重要：你的Brief将随执行链传递，每个下游Agent都能访问这份Brief作为上下文参考。各Agent自身已有完整的执行prompt，不需要你重复生成。",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "g3-script",
+      "type": "group",
+      "name": "script-group",
+      "position": { "x": 1380, "y": 100 },
+      "style": { "width": 720, "height": 480 },
+      "data": { "label": "3.脚本撰写与审查" }
+    },
+    {
+      "id": "agent-script",
+      "type": "subAgent",
+      "name": "script-writer",
+      "parentId": "g3-script",
+      "position": { "x": 30, "y": 40 },
+      "data": {
+        "description": "撰写完整视频脚本，HPSV结构",
+        "agentDefinition": "视频脚本撰写Agent：按HPSV结构撰写5-10分钟视频脚本，预埋4+爆点，口语化+动画适配。",
+        "prompt": "请撰写完整视频脚本。参考上方Production Brief了解项目背景。\n\n## 核心要求\n1. HPSV结构（Hook→Pain→Solution→Validation），时长5-10分钟\n2. 预埋≥4个爆点：反直觉×1、共鸣×1、实用×1、情感×1\n3. 口语化、有感染力、适合动画+旁白（不露脸）\n4. 参考 docs/06-脚本大纲模板.md 格式\n\n## 输出格式\n- **标题**\n- **钩子段**（45-60秒）：抓眼球开场\n- **痛点段**（60-90秒）：建立共鸣\n- **方案段**（120-180秒）：核心内容\n- **验证段**（60-90秒）：证据支撑\n- **CTA段**（30-45秒）：引导互动\n- **画面段落表**：编号、旁白文本、预估时长、视觉元素、情绪基调\n\n完成后标注：SCRIPT_COMPLETE。\n\n注意：如果是重试，请先阅读上文审查Agent的具体反馈意见，逐条修复。",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-script-review",
+      "type": "subAgent",
+      "name": "script-reviewer",
+      "parentId": "g3-script",
+      "position": { "x": 30, "y": 220 },
+      "data": {
+        "description": "独立审查脚本质量，严禁放水",
+        "agentDefinition": "独立脚本审查Agent。严格审查脚本质量，逐维度打分。给出明确的PASS/FAIL判定和详细修改建议。注意：如果之前已经审查过此脚本多次，请检查问题是否在改善。",
+        "prompt": "严格审查脚本，你是质量把关者，独立于撰写Agent。\n\n## 审查维度（每项1-5分）\n1. HPSV结构完整性（Hook吸引/共鸣/方案清晰/验证可信/CTA有力）\n2. 爆点密度（反直觉/共鸣/实用/情感是否到位）\n3. 节奏控制（信息密度、冷场风险、画面段落时长分配）\n4. 视觉适配性（每段是否有明确视觉描述，适合HTML动画呈现）\n5. 信息准确性（技术内容正确、比喻恰当）\n6. B站适配性（标题吸引、语言风格、时长合适）\n\n## 判定标准\n- PASS：总分≥24/30 且 无单项<3\n- FAIL：总分<24 或 任一单项<3\n\n## 输出格式\n```\n总评分：X/30（6项明细）\n判定：PASS 或 FAIL\n\n[若FAIL] 逐条列出：\n- 问题：具体描述\n- 修改建议：具体方案\n- 严重度：必须修复 / 建议优化\n\n[若PASS] 亮点：值得保留的优秀设计\n```\n\n如果是第3次以上审查本脚本，最后注明：<HISTORY>请检查本轮与前几轮的区别，标注仍在反复出现的老问题。</HISTORY>\n\n完成后标注：REVIEW_COMPLETE。",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-script-review",
+      "type": "askUserQuestion",
+      "name": "script-review-ask",
+      "parentId": "g3-script",
+      "position": { "x": 370, "y": 120 },
+      "data": {
+        "questionText": "脚本审查结果？",
+        "options": [
+          { "label": "通过，继续", "description": "审查通过，进入素材收集", "id": "opt-script-pass" },
+          { "label": "不通过，修改", "description": "存在问题需修改（最多5次重试）", "id": "opt-script-fail" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "prompt-script-retry",
+      "type": "prompt",
+      "name": "script-retry-note",
+      "parentId": "g3-script",
+      "position": { "x": 380, "y": 340 },
+      "data": {
+        "label": "脚本重试提醒",
+        "prompt": "脚本审查未通过。正在进入重试循环（最多5次）。\n\n请agent-script先阅读上文审查Agent的详细反馈，逐条针对性修改。不要重新从头写，只修复审查标注的问题。\n\n如果同一个问题反复出现，说明需要结构性调整而非小修。",
+        "variables": {}
+      }
+    },
+    {
+      "id": "ask-script-escalate",
+      "type": "askUserQuestion",
+      "name": "script-escalate-ask",
+      "parentId": "g3-script",
+      "position": { "x": 400, "y": 230 },
+      "data": {
+        "questionText": "脚本已重试多次，是否升级？",
+        "options": [
+          { "label": "继续重试修改", "description": "回到脚本撰写Agent再次修改", "id": "opt-script-retry" },
+          { "label": "升级给用户处理", "description": "暂停自动化，需手动介入处理脚本问题（查看上文审查报告了解具体问题）", "id": "opt-script-esc" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "g4-material",
+      "type": "group",
+      "name": "material-group",
+      "position": { "x": 2130, "y": 100 },
+      "style": { "width": 420, "height": 320 },
+      "data": { "label": "4.素材收集" }
+    },
+    {
+      "id": "agent-material",
+      "type": "subAgent",
+      "name": "material-collector",
+      "parentId": "g4-material",
+      "position": { "x": 30, "y": 60 },
+      "data": {
+        "description": "收集视觉参考+技术资料（合并）",
+        "agentDefinition": "素材收集Agent：根据脚本内容同时收集外部视觉参考素材和技术内容资料。",
+        "prompt": "根据脚本内容收集素材，分两个维度：\n\n## A. 视觉参考\n- 与主题相关的动画风格、配色方案、设计参考\n- 同类内容的视觉呈现方式\n- 推荐配色(HEX码)和动画效果\n\n## B. 技术资料\n- 验证脚本中技术信息的准确性\n- 收集可引用的数据来源\n- 整理关键术语准确定义\n- 可展示的代码示例（如有需要）\n\n## 输出\n```\n## 视觉参考\n- 风格建议、配色方案(HEX)、动画参考\n\n## 技术资料\n- 技术验证结果、数据来源、术语表、代码示例\n```\n完成后标注：MATERIALS_COMPLETE。",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "g5-narr",
+      "type": "group",
+      "name": "narr-group",
+      "position": { "x": 2580, "y": 100 },
+      "style": { "width": 680, "height": 480 },
+      "data": { "label": "5.旁白规划与审查" }
+    },
+    {
+      "id": "agent-narr",
+      "type": "subAgent",
+      "name": "narration-planner",
+      "parentId": "g5-narr",
+      "position": { "x": 30, "y": 40 },
+      "data": {
+        "description": "拆分脚本为7-10个画面段落并分配HTML模板",
+        "agentDefinition": "旁白规划Agent：将脚本拆分为画面段落，为每段分配最合适的HTML动画模板。",
+        "prompt": "根据脚本规划旁白与画面。参考Production Brief了解模板列表。\n\n## 要求\n1. 拆分为7-10个画面段落，每段40-90秒\n2. 为每段分配HTML动画模板（14个可用：frame-bold-poster/signal/creative-voltage/data-chart-nyt/electric-studio/glitch-title/light-leak-cinema/liquid-bg-hero/logo-outro/takram-organic/pentagram-stat/build-minimal/data-rollup + vfx-text-cursor）\n3. 参考 scripts/01-什么是大语言模型/narration.md 格式\n\n## 输出\n| 画面 | 旁白文本 | 时长 | 模板类型 | 画面要点 | 情绪 |\n|------|---------|------|---------|---------|------|\n\n完成后标注：NARRATION_READY。\n\n重试时请先阅读审查反馈，针对性调整。",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-narr-review",
+      "type": "subAgent",
+      "name": "narration-reviewer",
+      "parentId": "g5-narr",
+      "position": { "x": 30, "y": 220 },
+      "data": {
+        "description": "审查旁白分段节奏和模板匹配度",
+        "agentDefinition": "独立旁白审查Agent。审查画面分段节奏、模板选择合理性和视觉连贯性。",
+        "prompt": "审查旁白规划方案。\n\n## 审查维度（每项1-5分）\n1. 分段节奏：画面数量+每段时长合理\n2. 模板匹配度：模板选择适合内容\n3. 画面连贯性：转场和风格协调\n4. 覆盖完整性：旁白完整分配到所有画面\n\n## 判定：PASS(≥16/20) 或 FAIL(<16)\n\n## 输出\n- 评分明细\n- PASS/FAIL\n- FAIL时逐项列问题和修改建议\n\n完成后标注：REVIEW_COMPLETE。",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-narr-review",
+      "type": "askUserQuestion",
+      "name": "narr-review-ask",
+      "parentId": "g5-narr",
+      "position": { "x": 360, "y": 120 },
+      "data": {
+        "questionText": "旁白审查结果？",
+        "options": [
+          { "label": "通过，继续", "description": "进入视频制作阶段", "id": "opt-narr-pass" },
+          { "label": "不通过", "description": "需调整分段或模板分配", "id": "opt-narr-fail" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "prompt-narr-retry",
+      "type": "prompt",
+      "name": "narr-retry-note",
+      "parentId": "g5-narr",
+      "position": { "x": 380, "y": 330 },
+      "data": {
+        "label": "旁白重试提醒",
+        "prompt": "旁白规划需调整。请agent-narr阅读上文审查反馈，针对性修改分段或模板分配。最多5次重试。",
+        "variables": {}
+      }
+    },
+    {
+      "id": "ask-narr-escalate",
+      "type": "askUserQuestion",
+      "name": "narr-escalate-ask",
+      "parentId": "g5-narr",
+      "position": { "x": 400, "y": 220 },
+      "data": {
+        "questionText": "旁白已重试多次，是否升级？",
+        "options": [
+          { "label": "继续重试", "description": "回到旁白规划Agent修改", "id": "opt-narr-retry" },
+          { "label": "升级给用户", "description": "暂停自动化，需手动介入调整旁白规划（查看上文审查报告了解问题）", "id": "opt-narr-esc" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "g6-html",
+      "type": "group",
+      "name": "html-group",
+      "position": { "x": 3290, "y": 100 },
+      "style": { "width": 680, "height": 480 },
+      "data": { "label": "6a.HTML动画帧（并行）" }
+    },
+    {
+      "id": "agent-html",
+      "type": "subAgent",
+      "name": "html-generator",
+      "parentId": "g6-html",
+      "position": { "x": 30, "y": 40 },
+      "data": {
+        "description": "逐帧生成1920×1080 HTML动画",
+        "agentDefinition": "HTML动画帧生成Agent：根据旁白规划为每段生成独立HTML动画文件，调用frame-* skill模板。",
+        "prompt": "逐帧生成HTML动画文件。参考Production Brief了解模板列表。\n\n## 技术要求\n1. 每画面一个独立HTML，1920×1080\n2. 内联CSS动画，调用 .agents/skills/ 下对应 frame-* 模板的SKILL\n3. 每个HTML包含：进场动画+循环动画+画面内容\n4. 风格统一（色调、字体），与旁白情绪匹配\n5. 输出路径：scripts/[视频名]/frames/NN-name.html\n\n## ⚠️ 设计规范（强制执行，来自踩坑记录）\n- **全片统一暗色风格** — 禁止白色/浅色页面，所有背景 #0a0a0f ~ #0d0d14\n- **字体最小18px** — 在1920×1080下小于18px不可读\n- **禁止使用Inter字体** — Playwright录制时会抖动，用Geist或Noto Sans SC\n- **动画延迟匹配音频** — 文字不能比旁白先出现，引导语0.5s，主体文字3-5s，数字7-10s\n- **内容不重叠** — 任何元素不得被其他元素遮挡\n- **颜色对比度≥4.5:1** — 文字与背景对比度必须达标\n- 详细规范参考 scripts/[视频名]/style-guide.md\n\n## 步骤（每帧）\n1. 阅读对应的frame-* SKILL.md了解模板用法\n2. 根据画面要点生成HTML\n3. 标注FRAME_NN_COMPLETE\n\n全部完成后标注：ALL_FRAMES_COMPLETE。\n\n重试时只修复审查标注的问题帧，不要改动已通过的帧。",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-html-review",
+      "type": "subAgent",
+      "name": "html-reviewer",
+      "parentId": "g6-html",
+      "position": { "x": 30, "y": 220 },
+      "data": {
+        "description": "逐帧审查HTML动画质量",
+        "agentDefinition": "独立HTML帧审查Agent。逐帧检查动画正确性、视觉效果、风格统一性。",
+        "prompt": "逐帧审查HTML动画。必须同时进行代码审查和视觉截图审查。\n\n## 审查方式\n1. **代码审查**：检查CSS规范、字体、动画延迟、颜色对比度\n2. **视觉截图审查**：使用 visual-review 技能（MiMo v2.5视觉模型）截图审查每页\n\n## 审查维度（每帧1-5分）\n1. 动画正确性：流畅、无渲染错误\n2. 画面感染力：视觉吸引\n3. 内容匹配：准确表达旁白\n4. 风格统一：与整体一致（全暗色，无白蓝亮色页面）\n5. 完整性：进场+循环动画齐备\n6. **可见性**：文字清晰可读，字体≥18px，对比度≥4.5:1\n7. **动画同步**：文字动画不比音频先出现\n\n## 视觉截图审查流程\n```bash\nMIMO_API_KEY=$MIMO_API_KEY python ~/.claude/skills/visual-review/review.py --html 'frames/*.html' --output 'screenshots/visual-review-report.md'\n```\n\n## 判定\nPASS：每帧≥4分 且 视觉审查全部PASS\nFAIL：任一帧<4分 或 视觉审查有FAIL\n\n## 输出\n- 逐帧评分表\n- 视觉审查报告\n- PASS/FAIL\n- FAIL时每帧列出问题和修复方案\n\n完成后标注：REVIEW_COMPLETE。",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-html-review",
+      "type": "askUserQuestion",
+      "name": "html-review-ask",
+      "parentId": "g6-html",
+      "position": { "x": 360, "y": 120 },
+      "data": {
+        "questionText": "HTML帧审查结果？",
+        "options": [
+          { "label": "通过", "description": "所有帧合格，汇入视频合成", "id": "opt-html-pass" },
+          { "label": "不通过", "description": "存在不合格帧需修改", "id": "opt-html-fail" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "prompt-html-retry",
+      "type": "prompt",
+      "name": "html-retry-note",
+      "parentId": "g6-html",
+      "position": { "x": 380, "y": 330 },
+      "data": {
+        "label": "HTML重试提醒",
+        "prompt": "HTML帧审查未通过。请agent-html阅读上文审查反馈，只修复标注的问题帧。同一帧反复出问题可考虑更换模板类型。最多5次重试。",
+        "variables": {}
+      }
+    },
+    {
+      "id": "ask-html-escalate",
+      "type": "askUserQuestion",
+      "name": "html-escalate-ask",
+      "parentId": "g6-html",
+      "position": { "x": 400, "y": 220 },
+      "data": {
+        "questionText": "HTML帧已重试多次，是否升级？",
+        "options": [
+          { "label": "继续重试", "description": "回到HTML生成Agent修改", "id": "opt-html-retry" },
+          { "label": "升级给用户", "description": "暂停自动化，需手动介入修复HTML帧问题（查看上文审查报告了解具体缺陷）", "id": "opt-html-esc" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "g7-tts",
+      "type": "group",
+      "name": "tts-group",
+      "position": { "x": 3290, "y": 610 },
+      "style": { "width": 680, "height": 480 },
+      "data": { "label": "6b.TTS语音合成（并行）" }
+    },
+    {
+      "id": "agent-tts",
+      "type": "subAgent",
+      "name": "tts-synthesizer",
+      "parentId": "g7-tts",
+      "position": { "x": 30, "y": 40 },
+      "data": {
+        "description": "使用MiMo TTS声纹克隆合成旁白",
+        "agentDefinition": "TTS合成Agent：使用MiMo TTS API声纹克隆为每段旁白合成语音。参考 scripts/01-什么是大语言模型/synthesize.py 实现。",
+        "prompt": "使用MiMo TTS音色设计为每段旁白合成语音。\n\n## 技术要求\n1. **必须使用 mimo-v2.5-tts-voicedesign 模型**，不要用 voiceclone 或预置音色\n2. 音色描述参考 scripts/[视频名]/voice-prompt.md，核心要求：有个性、有口音、语速快、像朋友聊天\n3. 参考实现：scripts/[视频名]/synthesize.py\n4. 每段独立WAV，输出到 scripts/[视频名]/audio/NN.wav\n5. **每段音频结尾必须添加1.5秒静音**，用于转场间隔，避免两段音频紧贴\n6. API Key 通过环境变量 MIMO_API_KEY 读取，**禁止明文写在代码或命令行中**\n7. tp- 开头的 key 使用 token-plan-cn.xiaomimimo.com endpoint\n\n## 已知问题（必须避免）\n- 音色太无聊 → 必须有个性（口音、语速、情绪）\n- 音频紧贴 → 必须加1.5s静音间隔\n- API Key暴露 → 必须用环境变量\n\n## 输出\n- 每段合成后标注 TTS_NN_COMPLETE\n- 全部完成标注 ALL_TTS_COMPLETE\n- 音频时长汇总\n\n重试时只重新合成审查标注的问题段落。",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-tts-review",
+      "type": "subAgent",
+      "name": "tts-reviewer",
+      "parentId": "g7-tts",
+      "position": { "x": 30, "y": 220 },
+      "data": {
+        "description": "审查合成音频自然度和质量",
+        "agentDefinition": "独立TTS审查Agent。审查合成音频的自然度、清晰度、声纹一致性和节奏。",
+        "prompt": "逐段审查TTS合成音频。\n\n## 审查维度（每段1-5分）\n1. 音频清晰度（无杂音破音）\n2. 语速自然度（不能太慢，B站观众没耐心）\n3. **情感匹配度**（不能像念稿，要有个性、有感染力）\n4. 停顿节奏（段落间是否有1-1.5s静音间隔）\n5. **口音/个性**（是否有辨识度，不能是标准普通话机器人腔）\n\n## 已知问题（必须检查）\n- 音色太无聊 → 检查是否有个性（口音、语速、情绪）\n- 音频紧贴 → 检查每段结尾是否有1-1.5s静音\n- 语速太慢 → 检查是否偏快\n\n## 判定\nPASS：每段≥4分\nFAIL：任一段<4分（标注问题段落）\n\n## 输出\n- 逐段评分\n- PASS/FAIL\n- FAIL时列问题段落和建议\n\n完成后标注：REVIEW_COMPLETE。",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-tts-review",
+      "type": "askUserQuestion",
+      "name": "tts-review-ask",
+      "parentId": "g7-tts",
+      "position": { "x": 360, "y": 120 },
+      "data": {
+        "questionText": "TTS审查结果？",
+        "options": [
+          { "label": "通过", "description": "所有音频合格，汇入视频合成", "id": "opt-tts-pass" },
+          { "label": "不通过", "description": "存在不合格音频需重新合成", "id": "opt-tts-fail" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "prompt-tts-retry",
+      "type": "prompt",
+      "name": "tts-retry-note",
+      "parentId": "g7-tts",
+      "position": { "x": 380, "y": 330 },
+      "data": {
+        "label": "TTS重试提醒",
+        "prompt": "TTS审查未通过。请agent-tts阅读上文审查反馈，只重新合成问题段落。同一段反复失败检查文本是否适合TTS朗读。最多5次重试。",
+        "variables": {}
+      }
+    },
+    {
+      "id": "ask-tts-escalate",
+      "type": "askUserQuestion",
+      "name": "tts-escalate-ask",
+      "parentId": "g7-tts",
+      "position": { "x": 400, "y": 220 },
+      "data": {
+        "questionText": "TTS已重试多次，是否升级？",
+        "options": [
+          { "label": "继续重试", "description": "回到TTS合成Agent重试", "id": "opt-tts-retry" },
+          { "label": "升级给用户", "description": "暂停自动化，需手动介入处理TTS问题（查看上文审查报告了解问题段落）", "id": "opt-tts-esc" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "g8-assembly",
+      "type": "group",
+      "name": "assembly-group",
+      "position": { "x": 4000, "y": 100 },
+      "style": { "width": 720, "height": 480 },
+      "data": { "label": "7.视频合成与审查" }
+    },
+    {
+      "id": "agent-assemble",
+      "type": "subAgent",
+      "name": "video-assembler",
+      "parentId": "g8-assembly",
+      "position": { "x": 30, "y": 40 },
+      "data": {
+        "description": "渲染HTML帧为视频+合成TTS音频+字幕",
+        "agentDefinition": "视频合成Agent：将HTML帧渲染为视频片段，与TTS音频合成，添加字幕和转场，输出最终MP4。",
+        "prompt": "合成最终视频。\n\n## 步骤\n1. 将每个HTML帧渲染为视频片段（Playwright录制+ffmpeg编码）\n2. 按画面顺序拼接视频片段\n3. 为每段添加对应TTS音频\n4. 确保音画同步（音频对准画面起点）\n5. 添加画面间转场\n6. 从旁白文本生成字幕\n7. 导出最终视频\n\n## ⚠️ 技术规范（强制执行，来自踩坑记录）\n- **Playwright必须设置 color_scheme=\"dark\"** — 防止白屏闪光弹\n- **中文路径用临时目录** — ffmpeg不支持中文路径，复制到temp处理后复制回来\n- **使用 imageio-ffmpeg** — 不依赖系统ffmpeg：`import imageio_ffmpeg; FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()`\n- **动画冻结** — 录制前冻结CSS动画，等字体加载完再解冻\n- 详细规范参考 scripts/[视频名]/merge.py\n\n## 输出参数\n- 1920×1080, 30fps, H.264, AAC 128kbps\n- 输出：scripts/[视频名]/output/final.mp4\n\n## 输出清单\n- 最终视频路径和总时长\n- 音画同步检查报告\n- 各段衔接流畅度\n\n完成后标注：ASSEMBLY_COMPLETE。\n\n重试时只修复审查标注的问题段落/时间点。",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-assembly-review",
+      "type": "subAgent",
+      "name": "assembly-reviewer",
+      "parentId": "g8-assembly",
+      "position": { "x": 30, "y": 220 },
+      "data": {
+        "description": "审查成品视频质量，发布前最后一道关",
+        "agentDefinition": "独立成品审查Agent。最严格标准审查最终视频，这是发布前最后一道关。",
+        "prompt": "以最严格标准审查成品视频。这是发布前最后一道关。\n\n## 审查维度（每项1-5分）\n1. 音画同步（旁白与画面精确匹配）\n2. 节奏流畅（观看体验、无冷场）\n3. 内容准确（技术信息无错误）\n4. 画质清晰（1920×1080渲染质量）\n5. 字幕准确（无错别字、时间轴正确）\n6. 转场自然（画面过渡流畅）\n7. 音频质量（音量均衡、无突兀）\n8. 首帧吸引力（前5秒是否抓眼球）\n\n## 判定\nPASS：≥32/40 且 无单项<3\nFAIL：<32 或 任一单项<3\n\n## 输出\n- 总评分和8项明细\n- PASS/FAIL\n- FAIL时标注问题时间点和具体描述\n\n完成后标注：REVIEW_COMPLETE。",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-assembly-review",
+      "type": "askUserQuestion",
+      "name": "assembly-review-ask",
+      "parentId": "g8-assembly",
+      "position": { "x": 380, "y": 120 },
+      "data": {
+        "questionText": "成品审查结果？",
+        "options": [
+          { "label": "通过", "description": "视频质量合格，准备发布", "id": "opt-asm-pass" },
+          { "label": "不通过", "description": "存在问题需调整后再审", "id": "opt-asm-fail" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "prompt-assembly-retry",
+      "type": "prompt",
+      "name": "assembly-retry-note",
+      "parentId": "g8-assembly",
+      "position": { "x": 380, "y": 330 },
+      "data": {
+        "label": "合成重试提醒",
+        "prompt": "成品审查未通过。请agent-assemble阅读上文审查反馈，优先修复音画同步和画质问题。最多5次重试。",
+        "variables": {}
+      }
+    },
+    {
+      "id": "ask-assembly-escalate",
+      "type": "askUserQuestion",
+      "name": "assembly-escalate-ask",
+      "parentId": "g8-assembly",
+      "position": { "x": 400, "y": 220 },
+      "data": {
+        "questionText": "合成已重试多次，是否升级？",
+        "options": [
+          { "label": "继续重试", "description": "回到合成Agent调整", "id": "opt-asm-retry" },
+          { "label": "升级给用户", "description": "暂停自动化，需手动介入处理视频合成问题（查看上文审查报告了解具体缺陷）", "id": "opt-asm-esc" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "g9-publish",
+      "type": "group",
+      "name": "publish-group",
+      "position": { "x": 4750, "y": 100 },
+      "style": { "width": 720, "height": 480 },
+      "data": { "label": "8.发布优化" }
+    },
+    {
+      "id": "agent-publish",
+      "type": "subAgent",
+      "name": "publish-generator",
+      "parentId": "g9-publish",
+      "position": { "x": 30, "y": 40 },
+      "data": {
+        "description": "生成B站发布全素材（标题/标签/分区/简介/封面文案）",
+        "agentDefinition": "发布素材生成Agent：为B站视频生成优化的标题、标签、分区、封面文案、简介和发布设置。",
+        "prompt": "为视频生成B站发布全素材。\n\n## 必须生成\n1. **视频标题**（3-5备选，≤80字，含热门关键词）\n2. **分区推荐**：具体到二级分区（如 科技→计算机技术 / 知识→科学科普）\n3. **标签**（10-15个）：核心标签+流量标签+长尾标签\n4. **封面文案**（3方案）：大字标题+副标题+emoji建议，附封面尺寸要求(1920×1080或1146×717)\n5. **视频简介**：前100字折叠前内容+完整简介含章节时间戳+互动引导\n6. **原创声明**：自制/转载\n7. **发布时间建议**：最佳时段+具体推荐时间\n\n## 输出格式\n发布素材包，按上述7项组织。完成后标注：PUBLISH_READY。\n\n重试时针对性修改审查标注的问题项。",
+        "builtInType": "general-purpose",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "agent-pub-review",
+      "type": "subAgent",
+      "name": "publish-reviewer",
+      "parentId": "g9-publish",
+      "position": { "x": 30, "y": 220 },
+      "data": {
+        "description": "审查发布素材的点击率和SEO优化",
+        "agentDefinition": "独立发布审查Agent。审查标题点击率、标签覆盖度和SEO优化程度。",
+        "prompt": "审查发布素材优化质量。\n\n## 审查维度（每项1-5分）\n1. 标题吸引力（点击率预估、关键词）\n2. 分区正确性（适合目标受众）\n3. 标签覆盖度（核心+流量+长尾）\n4. 封面文案（匹配画面、吸引力）\n5. 简介质量（前100字是否引人展开）\n\n## 判定\nPASS：≥20/25\nFAIL：<20\n\n## 输出\n- 评分明细\n- PASS/FAIL\n- FAIL时逐项改进建议\n\n完成后标注：REVIEW_COMPLETE。",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-pub-review",
+      "type": "askUserQuestion",
+      "name": "pub-review-ask",
+      "parentId": "g9-publish",
+      "position": { "x": 370, "y": 120 },
+      "data": {
+        "questionText": "发布素材审查结果？",
+        "options": [
+          { "label": "通过，生成发布指南", "description": "素材优化到位，输出手动发布步骤", "id": "opt-pub-pass" },
+          { "label": "不通过", "description": "需优化发布素材", "id": "opt-pub-fail" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "prompt-pub-retry",
+      "type": "prompt",
+      "name": "pub-retry-note",
+      "parentId": "g9-publish",
+      "position": { "x": 370, "y": 330 },
+      "data": {
+        "label": "发布素材重试",
+        "prompt": "发布素材需优化。请agent-publish阅读上文审查反馈，针对性修改。最多5次重试。",
+        "variables": {}
+      }
+    },
+    {
+      "id": "ask-pub-escalate",
+      "type": "askUserQuestion",
+      "name": "pub-escalate-ask",
+      "parentId": "g9-publish",
+      "position": { "x": 400, "y": 220 },
+      "data": {
+        "questionText": "发布素材已重试多次，是否升级？",
+        "options": [
+          { "label": "继续重试", "description": "回到发布素材Agent修改", "id": "opt-pub-retry" },
+          { "label": "升级给用户", "description": "暂停自动化，需手动介入处理发布素材（查看上文审查报告了解问题）", "id": "opt-pub-esc" }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "prompt-pub-manual",
+      "type": "prompt",
+      "name": "publish-guide",
+      "parentId": "g9-publish",
+      "position": { "x": 410, "y": 130 },
+      "data": {
+        "label": "手动发布指南",
+        "prompt": "## B站发布清单\n\n请将以下素材手动填入B站创作中心。\n\n### 发布URL\nhttps://member.bilibili.com/platform/upload/video/frame\n\n### 字段规范\n| 字段 | 限制 |\n|------|------|\n| 标题 | ≤80字 |\n| 分区 | 必选（二级分区） |\n| 标签 | ≤10个，每个≤20字 |\n| 封面 | 1920×1080 或 1146×717，JPG/PNG |\n| 简介 | 前100字折叠前可见 |\n\n### 注意事项\n1. 上传后需经B站审核（通常30分钟-2小时）\n2. 审核通过后才公开可见\n3. 如需定时发布，在发布设置中选择\n4. 系列视频可在发布后归入合集\n5. 建议发布后关注数据和弹幕反馈\n\n### 你的发布素材\n（参考上文agent-publish的输出）\n\n🎉 工作流完成！",
+        "variables": {}
+      }
+    },
+    {
+      "id": "end-success",
+      "type": "end",
+      "name": "success",
+      "position": { "x": 5800, "y": 300 },
+      "data": { "label": "发布完成 ✅" }
+    },
+    {
+      "id": "end-escalated",
+      "type": "end",
+      "name": "escalated",
+      "position": { "x": 5800, "y": 500 },
+      "data": { "label": "暂停·需人工介入 ⚠️" }
+    }
+  ],
+  "connections": [
+    { "id": "c01", "from": "start-1", "to": "prompt-topic", "fromPort": "output", "toPort": "input" },
+    { "id": "c02", "from": "prompt-topic", "to": "agent-trending", "fromPort": "output", "toPort": "input" },
+    { "id": "c03", "from": "agent-trending", "to": "agent-match", "fromPort": "output", "toPort": "input" },
+    { "id": "c04", "from": "agent-match", "to": "ask-topic", "fromPort": "output", "toPort": "input" },
+    { "id": "c05", "from": "ask-topic", "to": "agent-orchestrator", "fromPort": "branch-0", "toPort": "input", "condition": "确认推荐选题" },
+    { "id": "c06", "from": "ask-topic", "to": "prompt-topic-final", "fromPort": "branch-1", "toPort": "input", "condition": "用户指定其他选题" },
+    { "id": "c07", "from": "prompt-topic-final", "to": "agent-orchestrator", "fromPort": "output", "toPort": "input" },
+    { "id": "c08", "from": "agent-orchestrator", "to": "agent-script", "fromPort": "output", "toPort": "input" },
+    { "id": "c09", "from": "agent-script", "to": "agent-script-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c10", "from": "agent-script-review", "to": "ask-script-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c11", "from": "ask-script-review", "to": "agent-material", "fromPort": "branch-0", "toPort": "input", "condition": "剧本通过→收集素材" },
+    { "id": "c12", "from": "ask-script-review", "to": "prompt-script-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试提醒" },
+    { "id": "c13", "from": "prompt-script-retry", "to": "ask-script-escalate", "fromPort": "output", "toPort": "input" },
+    { "id": "c14", "from": "ask-script-escalate", "to": "agent-script", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
+    { "id": "c15", "from": "ask-script-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→脚本阶段卡死" },
+    { "id": "c16", "from": "agent-material", "to": "agent-narr", "fromPort": "output", "toPort": "input" },
+    { "id": "c17", "from": "agent-narr", "to": "agent-narr-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c18", "from": "agent-narr-review", "to": "ask-narr-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c19", "from": "ask-narr-review", "to": "agent-html", "fromPort": "branch-0", "toPort": "input", "condition": "通过→并行生产HTML" },
+    { "id": "c20", "from": "ask-narr-review", "to": "agent-tts", "fromPort": "branch-0", "toPort": "input", "condition": "通过→并行生产TTS" },
+    { "id": "c21", "from": "ask-narr-review", "to": "prompt-narr-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
+    { "id": "c22", "from": "prompt-narr-retry", "to": "ask-narr-escalate", "fromPort": "output", "toPort": "input" },
+    { "id": "c23", "from": "ask-narr-escalate", "to": "agent-narr", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
+    { "id": "c24", "from": "ask-narr-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→旁白阶段卡死" },
+    { "id": "c25", "from": "agent-html", "to": "agent-html-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c26", "from": "agent-html-review", "to": "ask-html-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c27", "from": "ask-html-review", "to": "agent-assemble", "fromPort": "branch-0", "toPort": "input", "condition": "通过→汇入合成" },
+    { "id": "c28", "from": "ask-html-review", "to": "prompt-html-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
+    { "id": "c29", "from": "prompt-html-retry", "to": "ask-html-escalate", "fromPort": "output", "toPort": "input" },
+    { "id": "c30", "from": "ask-html-escalate", "to": "agent-html", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
+    { "id": "c31", "from": "ask-html-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→HTML阶段卡死" },
+    { "id": "c32", "from": "agent-tts", "to": "agent-tts-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c33", "from": "agent-tts-review", "to": "ask-tts-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c34", "from": "ask-tts-review", "to": "agent-assemble", "fromPort": "branch-0", "toPort": "input", "condition": "通过→汇入合成" },
+    { "id": "c35", "from": "ask-tts-review", "to": "prompt-tts-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
+    { "id": "c36", "from": "prompt-tts-retry", "to": "ask-tts-escalate", "fromPort": "output", "toPort": "input" },
+    { "id": "c37", "from": "ask-tts-escalate", "to": "agent-tts", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
+    { "id": "c38", "from": "ask-tts-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→TTS阶段卡死" },
+    { "id": "c39", "from": "agent-assemble", "to": "agent-assembly-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c40", "from": "agent-assembly-review", "to": "ask-assembly-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c41", "from": "ask-assembly-review", "to": "agent-publish", "fromPort": "branch-0", "toPort": "input", "condition": "通过→发布" },
+    { "id": "c42", "from": "ask-assembly-review", "to": "prompt-assembly-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
+    { "id": "c43", "from": "prompt-assembly-retry", "to": "ask-assembly-escalate", "fromPort": "output", "toPort": "input" },
+    { "id": "c44", "from": "ask-assembly-escalate", "to": "agent-assemble", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
+    { "id": "c45", "from": "ask-assembly-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→合成阶段卡死" },
+    { "id": "c46", "from": "agent-publish", "to": "agent-pub-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c47", "from": "agent-pub-review", "to": "ask-pub-review", "fromPort": "output", "toPort": "input" },
+    { "id": "c48", "from": "ask-pub-review", "to": "prompt-pub-manual", "fromPort": "branch-0", "toPort": "input", "condition": "通过→发布指南" },
+    { "id": "c49", "from": "ask-pub-review", "to": "prompt-pub-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
+    { "id": "c50", "from": "prompt-pub-retry", "to": "ask-pub-escalate", "fromPort": "output", "toPort": "input" },
+    { "id": "c51", "from": "ask-pub-escalate", "to": "agent-publish", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
+    { "id": "c52", "from": "ask-pub-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→发布阶段卡死" },
+    { "id": "c53", "from": "prompt-pub-manual", "to": "end-success", "fromPort": "output", "toPort": "input" }
+  ],
+  "createdAt": "2026-06-26T07:30:00.000Z",
+  "updatedAt": "2026-06-28T12:00:00.000Z",
+  "subAgentFlows": []
+}

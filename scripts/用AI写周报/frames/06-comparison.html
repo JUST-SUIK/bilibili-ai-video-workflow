@@ -1,0 +1,400 @@
+<!-- REVIEW: PASSED -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Frame 06 - 验证：Before/After对比</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter+Tight:wght@700;800;900&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #0d0d14;
+    overflow: hidden;
+    font-family: 'Noto Sans SC', 'Inter Tight', sans-serif;
+    position: relative;
+  }
+
+  /* 左蓝屏 - 暗调 */
+  .panel-left {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 47%;
+    height: 100%;
+    background: #2a3a8a;
+    z-index: 2;
+    transform: translateX(-100%);
+    animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px;
+  }
+
+  /* 右暗屏 */
+  .panel-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 53%;
+    height: 100%;
+    background: #0d0d14;
+    z-index: 2;
+    transform: translateX(100%);
+    animation: slideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 80px 80px 120px;
+  }
+
+  @keyframes slideInLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  /* 蓝屏高光 */
+  .panel-left::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at top left, rgba(111,134,255,0.15) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0;
+    animation: fadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.9s forwards;
+  }
+
+  /* 左屏 meta 行 */
+  .left-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.08em;
+    min-height: 21px;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1s forwards;
+    position: relative;
+    z-index: 3;
+  }
+
+  /* 左屏手写体 */
+  .left-script {
+    font-family: 'Caveat', cursive;
+    font-size: 72px;
+    font-weight: 700;
+    color: #ffffff;
+    transform: rotate(-7deg);
+    opacity: 0;
+    animation: scriptPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.4s forwards;
+    position: relative;
+    z-index: 3;
+    min-height: 108px;
+    margin-bottom: 24px;
+  }
+
+  @keyframes scriptPop {
+    from { opacity: 0; transform: rotate(-7deg) scale(0.8); }
+    to { opacity: 1; transform: rotate(-7deg) scale(1); }
+  }
+
+  .left-script.breathing {
+    animation: scriptBreathe 3s cubic-bezier(0.22, 0.68, 0, 1.04) infinite alternate;
+  }
+
+  @keyframes scriptBreathe {
+    0% { transform: rotate(-7deg); }
+    100% { transform: rotate(-3deg); }
+  }
+
+  /* 手写下划线 */
+  .script-underline {
+    width: 200px;
+    height: 3px;
+    position: relative;
+    z-index: 3;
+    margin-bottom: 40px;
+  }
+
+  .script-underline svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .script-underline path {
+    stroke: rgba(255,255,255,0.4);
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: strokeDraw 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.9s forwards;
+  }
+
+  @keyframes strokeDraw {
+    from { stroke-dashoffset: 200; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Before 卡片 */
+  .before-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 28px;
+    position: relative;
+    z-index: 3;
+    opacity: 0;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.3);
+    animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.2s forwards;
+  }
+
+  .before-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 16px;
+  }
+
+  .before-text {
+    font-size: 20px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.6;
+    min-height: 30px;
+  }
+
+  .before-tag {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 13px;
+    color: #ff8a65;
+    background: rgba(255,90,44,0.2);
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+
+  /* 右屏标题 */
+  .right-title {
+    font-size: 56px;
+    font-weight: 900;
+    color: #f5f5f7;
+    line-height: 1.5;
+    min-height: 168px;
+    margin-bottom: 40px;
+    opacity: 0;
+  }
+
+  .right-title .ln {
+    display: block;
+    opacity: 0;
+    transform: translateY(26px);
+  }
+
+  .right-title .ln:nth-child(1) { animation: lineRise 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1s forwards; }
+  .right-title .ln:nth-child(2) { animation: lineRise 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.18s forwards; }
+
+  .right-title .volt {
+    -webkit-text-stroke: 2px #4361ee;
+    color: transparent;
+  }
+
+  @keyframes lineRise {
+    from { opacity: 0; transform: translateY(26px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* After 卡片 */
+  .after-card {
+    background: rgba(67,97,238,0.08);
+    border: 1px solid rgba(67,97,238,0.2);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 32px;
+    opacity: 0;
+    box-shadow: inset 0 1px 1px rgba(67,97,238,0.1), 0 4px 24px rgba(0,0,0,0.3);
+    animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s forwards;
+  }
+
+  .after-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #4361ee;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .after-label .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+  }
+
+  .after-text {
+    font-size: 20px;
+    color: #f5f5f7;
+    line-height: 1.6;
+    min-height: 30px;
+  }
+
+  .after-text .key {
+    color: #4361ee;
+    font-weight: 700;
+  }
+
+  .after-tag {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 13px;
+    color: #6ee7b7;
+    background: rgba(34,197,94,0.18);
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: 700;
+    animation: afterTagGlow 2.5s cubic-bezier(0.22, 0.68, 0, 1.04) infinite alternate;
+  }
+
+  @keyframes afterTagGlow {
+    0% { box-shadow: 0 0 4px rgba(34,197,94,0.2); }
+    100% { box-shadow: 0 0 12px rgba(34,197,94,0.5), 0 0 24px rgba(34,197,94,0.2); }
+  }
+
+  /* 金句 */
+  .golden-rule {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f5f5f7;
+    line-height: 1.5;
+    opacity: 0;
+    min-height: 84px;
+    animation: fadeInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.5s forwards;
+  }
+
+  .golden-rule .you {
+    color: #4361ee;
+  }
+  .golden-rule .ai {
+    color: #ff5a2c;
+  }
+
+  /* 底部 caption */
+  .caption-left {
+    position: absolute;
+    bottom: 48px;
+    left: 80px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+    z-index: 10;
+    opacity: 0;
+    animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards;
+  }
+
+  .caption-right {
+    position: absolute;
+    bottom: 48px;
+    right: 80px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: rgba(255,255,255,0.35);
+    z-index: 10;
+    opacity: 0;
+    animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel-left, .panel-right { transform: none !important; animation: none !important; }
+    .panel-left::after { opacity: 1 !important; animation: none !important; }
+    .left-meta, .left-script, .left-script.breathing, .before-card, .after-card, .golden-rule { opacity: 1 !important; animation: none !important; transform: none !important; }
+    .after-tag { animation: none !important; box-shadow: none !important; }
+    .right-title .ln { opacity: 1 !important; animation: none !important; transform: none !important; }
+    .right-title { opacity: 1 !important; }
+    .script-underline path { stroke-dashoffset: 0 !important; animation: none !important; }
+    .caption-left, .caption-right { opacity: 1 !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 左蓝屏 -->
+  <div class="panel-left">
+    <div class="left-meta">// BEFORE vs AFTER</div>
+
+    <div class="left-script">自己写 vs AI润色</div>
+
+    <div class="script-underline">
+      <svg viewBox="0 0 200 3"><path d="M0 1.5 Q50 0, 100 1.5 T200 1.5"/></svg>
+    </div>
+
+    <div class="before-card">
+      <div class="before-label">BEFORE · 自己写</div>
+      <div class="before-text">"周一开会，周三交方案，周四帮同事解决问题。"</div>
+      <div class="before-tag">流水账，领导看了想睡觉</div>
+    </div>
+  </div>
+
+  <!-- 右暗屏 -->
+  <div class="panel-right">
+    <div class="right-title">
+      <span class="ln">同样的内容</span>
+      <span class="ln">听起来<span class="volt">专业</span>多了</span>
+    </div>
+
+    <div class="after-card">
+      <div class="after-label"><span class="dot"></span> AFTER · AI润色后</div>
+      <div class="after-text">"本周重点推进<span class="key">Q3目标对齐</span>，完成产品方案V2交付，顺手帮同事解决了服务器问题。"</div>
+      <div class="after-tag">专业表达，信息量更大</div>
+    </div>
+
+    <div class="golden-rule">
+      你负责<span class="you">"做了什么"</span><br>
+      AI负责<span class="ai">"怎么说"</span>
+    </div>
+  </div>
+
+  <!-- 底部 -->
+  <div class="caption-left">FRAME 06 · BEFORE / AFTER</div>
+  <div class="caption-right">00:06:00</div>
+
+  <script>
+    // left-script 进场动画结束后切换为旋转呼吸动画
+    const leftScript = document.querySelector('.left-script');
+    if (leftScript) {
+      leftScript.addEventListener('animationend', function(e) {
+        if (e.animationName === 'scriptPop') {
+          leftScript.style.opacity = '1';
+          leftScript.style.transform = 'rotate(-7deg) scale(1)';
+          leftScript.classList.add('breathing');
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>

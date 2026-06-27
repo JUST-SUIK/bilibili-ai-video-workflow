@@ -1,0 +1,42 @@
+# === 敏感信息 ===
+.env
+.env.*
+*.key
+
+# 个人声纹音频
+*.wav
+*.mp3
+
+# Claude 配置
+.claude/
+.agents/
+
+# === 构建产物 ===
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+dist/
+build/
+.tmp/
+tmp/
+
+# === 视频/音频/截图输出 ===
+**/output/
+**/audio/
+**/audio_output/
+**/video_output/
+**/screenshots/*.png
+**/screenshots/*.mp4
+
+# === 系统文件 ===
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+
+# === 编辑器 ===
+.vscode/
+.idea/
+*.code-workspace

@@ -1,0 +1,501 @@
+<!-- REVIEW: PASSED -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Frame 07 - 总结 + CTA</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter+Tight:wght@500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #08090c;
+    overflow: hidden;
+    font-family: 'Noto Sans SC', 'Inter Tight', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  /* 暗角 */
+  body::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* 顶部 ribbon */
+  .ribbon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #4361ee, #ff5a2c, #4361ee, #ff5a2c);
+    background-size: 200% 100%;
+    z-index: 10;
+    animation: ribbonFlow 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  }
+
+  @keyframes ribbonFlow {
+    0% { background-position: 0% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Logo 区域 - CSS 几何绘制 */
+  .logo-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 40px;
+    z-index: 5;
+  }
+
+  .logo-piece {
+    position: absolute;
+    opacity: 0;
+  }
+
+  /* Logo 由几何块组成 */
+  .logo-piece:nth-child(1) {
+    width: 50px;
+    height: 50px;
+    background: #4361ee;
+    border-radius: 8px;
+    top: 10px;
+    left: 10px;
+    animation: logoPieceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards;
+  }
+
+  .logo-piece:nth-child(2) {
+    width: 50px;
+    height: 50px;
+    background: #ff5a2c;
+    border-radius: 8px;
+    top: 10px;
+    right: 10px;
+    animation: logoPieceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s forwards;
+  }
+
+  .logo-piece:nth-child(3) {
+    width: 50px;
+    height: 50px;
+    background: #ffffff;
+    border-radius: 8px;
+    bottom: 10px;
+    left: 10px;
+    animation: logoPieceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.36s forwards;
+  }
+
+  .logo-piece:nth-child(4) {
+    width: 50px;
+    height: 50px;
+    background: rgba(67,97,238,0.4);
+    border-radius: 50%;
+    bottom: 10px;
+    right: 10px;
+    animation: logoPieceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.44s forwards;
+  }
+
+  .logo-piece:nth-child(5) {
+    width: 30px;
+    height: 2px;
+    background: rgba(255,255,255,0.3);
+    top: 60px;
+    left: 45px;
+    animation: logoPieceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.52s forwards;
+  }
+
+  .logo-piece:nth-child(6) {
+    width: 2px;
+    height: 30px;
+    background: rgba(255,255,255,0.3);
+    top: 45px;
+    left: 60px;
+    animation: logoPieceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s forwards;
+  }
+
+  @keyframes logoPieceIn {
+    from {
+      opacity: 0;
+      transform: translate(var(--tx, 0), var(--ty, 0)) scale(1.4);
+    }
+    to {
+      opacity: 1;
+      transform: translate(0, 0) scale(1);
+    }
+  }
+
+  .logo-piece:nth-child(1) { --tx: -60px; --ty: -60px; }
+  .logo-piece:nth-child(2) { --tx: 60px; --ty: -60px; }
+  .logo-piece:nth-child(3) { --tx: -60px; --ty: 60px; }
+  .logo-piece:nth-child(4) { --tx: 60px; --ty: 60px; }
+  .logo-piece:nth-child(5) { --tx: 0; --ty: -40px; }
+  .logo-piece:nth-child(6) { --tx: -40px; --ty: 0; }
+
+  /* Logo glow bloom - 进场 */
+  .logo-container.bloom {
+    animation: glowBloom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1s forwards;
+  }
+
+  @keyframes glowBloom {
+    0% { filter: none; }
+    50% { filter: drop-shadow(0 0 24px rgba(67,97,238,0.5)); }
+    100% { filter: drop-shadow(0 0 16px rgba(67,97,238,0.25)); }
+  }
+
+  /* Logo glow bloom - 呼吸循环 */
+  .logo-container.glow-breathing {
+    animation: glowBreathe 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite alternate;
+  }
+
+  @keyframes glowBreathe {
+    0% { filter: drop-shadow(0 0 8px rgba(67,97,238,0.2)); }
+    100% { filter: drop-shadow(0 0 28px rgba(67,97,238,0.6)); }
+  }
+
+  /* 品牌名 */
+  .brand-name {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    color: #f5f5f7;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    z-index: 5;
+    opacity: 0;
+    min-height: 84px;
+    animation: typewriter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.4s forwards;
+  }
+
+  @keyframes typewriter {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Tagline */
+  .tagline {
+    font-size: 22px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 60px;
+    z-index: 5;
+    opacity: 0;
+    min-height: 33px;
+    animation: fadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards;
+  }
+
+  /* 核心观点卡片 */
+  .core-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 40px 60px;
+    text-align: center;
+    margin-bottom: 48px;
+    z-index: 5;
+    opacity: 0;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.3);
+    animation: fadeInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2s forwards;
+    max-width: 900px;
+  }
+
+  .core-text {
+    font-size: 36px;
+    font-weight: 900;
+    color: #f5f5f7;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    min-height: 54px;
+  }
+
+  .core-text .blue { color: #4361ee; }
+  .core-text .orange { color: #ff5a2c; }
+
+  .core-sub {
+    font-size: 18px;
+    color: rgba(255,255,255,0.4);
+    min-height: 27px;
+  }
+
+  /* 三个模板回顾 */
+  .template-recap {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 48px;
+    z-index: 5;
+    opacity: 0;
+    animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.5s forwards;
+  }
+
+  .recap-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.04), 0 2px 12px rgba(0,0,0,0.2);
+  }
+
+  .recap-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #4361ee;
+    background: rgba(67,97,238,0.12);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .recap-text {
+    font-size: 16px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    min-height: 24px;
+  }
+
+  /* CTA 按钮组 */
+  .cta-group {
+    display: flex;
+    gap: 20px;
+    z-index: 5;
+    opacity: 0;
+    animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards;
+  }
+
+  .cta-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .cta-btn:active {
+    transform: scale(0.97);
+  }
+
+  .cta-btn.primary {
+    background: #ff5a2c;
+    color: #ffffff;
+    animation: ctaPulse 2s cubic-bezier(0.22, 0.68, 0, 1.04) infinite;
+  }
+
+  .cta-btn.primary:hover {
+    box-shadow: 0 4px 24px rgba(255,90,44,0.4);
+  }
+
+  .cta-btn.secondary:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .cta-btn.tertiary:hover {
+    background: rgba(67,97,238,0.2);
+    border-color: rgba(67,97,238,0.35);
+  }
+
+  @keyframes ctaPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,90,44,0.4); }
+    50% { box-shadow: 0 0 20px 4px rgba(255,90,44,0.5); }
+  }
+
+  .cta-btn.secondary {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.7);
+  }
+
+  .cta-btn.tertiary {
+    background: rgba(67,97,238,0.12);
+    border: 1px solid rgba(67,97,238,0.2);
+    color: #818cf8;
+  }
+
+  .cta-icon {
+    font-size: 20px;
+  }
+
+  /* 下期预告 */
+  .next-preview {
+    position: absolute;
+    bottom: 80px;
+    text-align: center;
+    z-index: 5;
+    opacity: 0;
+    animation: fadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.5s forwards;
+  }
+
+  .next-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    margin-bottom: 8px;
+  }
+
+  .next-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    min-height: 30px;
+  }
+
+  .next-title span {
+    color: #4361ee;
+  }
+
+  /* 底部元数据 */
+  .bottom-meta {
+    position: absolute;
+    bottom: 32px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    z-index: 5;
+    opacity: 0;
+    animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4s forwards;
+  }
+
+  .bottom-meta .sep {
+    color: rgba(255,255,255,0.1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo-piece { opacity: 1 !important; animation: none !important; transform: none !important; }
+    .logo-container, .logo-container.bloom, .logo-container.glow-breathing { animation: none !important; filter: drop-shadow(0 0 16px rgba(67,97,238,0.25)) !important; }
+    .ribbon { animation: none !important; }
+    .cta-btn.primary { animation: none !important; box-shadow: none !important; }
+    .brand-name, .tagline, .core-card, .template-recap, .cta-group, .next-preview, .bottom-meta { opacity: 1 !important; animation: none !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 顶部 ribbon -->
+  <div class="ribbon"></div>
+
+  <!-- Logo -->
+  <div class="logo-container bloom">
+    <div class="logo-piece"></div>
+    <div class="logo-piece"></div>
+    <div class="logo-piece"></div>
+    <div class="logo-piece"></div>
+    <div class="logo-piece"></div>
+    <div class="logo-piece"></div>
+  </div>
+
+  <!-- 品牌名 -->
+  <div class="brand-name">AI学习之路</div>
+  <div class="tagline">用AI提升工作效率，从周报开始</div>
+
+  <!-- 核心观点 -->
+  <div class="core-card">
+    <div class="core-text">
+      你负责<span class="blue">回忆</span>，AI负责<span class="orange">表达</span>
+    </div>
+    <div class="core-sub">先把素材整理好，再让AI润色 —— 10分钟搞定一周周报</div>
+  </div>
+
+  <!-- 模板回顾 -->
+  <div class="template-recap">
+    <div class="recap-item">
+      <div class="recap-num">01</div>
+      <div class="recap-text">基础版</div>
+    </div>
+    <div class="recap-item">
+      <div class="recap-num">02</div>
+      <div class="recap-text">项目版</div>
+    </div>
+    <div class="recap-item">
+      <div class="recap-num">03</div>
+      <div class="recap-text">问题解决版</div>
+    </div>
+  </div>
+
+  <!-- CTA 按钮 -->
+  <div class="cta-group">
+    <div class="cta-btn primary">
+      <span class="cta-icon">★</span>
+      收藏 · 下次写周报直接用
+    </div>
+    <div class="cta-btn secondary">
+      <span class="cta-icon">💬</span>
+      评论：你平时写周报要多久？
+    </div>
+    <div class="cta-btn tertiary">
+      <span class="cta-icon">→</span>
+      关注 · 下期：AI写日报和月报
+    </div>
+  </div>
+
+  <!-- 下期预告 -->
+  <div class="next-preview">
+    <div class="next-label">NEXT EPISODE</div>
+    <div class="next-title">下期讲怎么用AI写<span>日报和月报</span>，感兴趣点个关注</div>
+  </div>
+
+  <!-- 底部元数据 -->
+  <div class="bottom-meta">
+    <span>AI学习之路</span>
+    <span class="sep">·</span>
+    <span>2026</span>
+    <span class="sep">·</span>
+    <span>FRAME 07</span>
+  </div>
+
+  <script>
+    // logo 进场发光动画结束后切换为呼吸发光循环
+    const logo = document.querySelector('.logo-container.bloom');
+    if (logo) {
+      logo.addEventListener('animationend', function(e) {
+        if (e.animationName === 'glowBloom') {
+          logo.style.filter = 'drop-shadow(0 0 16px rgba(67,97,238,0.25))';
+          logo.classList.remove('bloom');
+          logo.classList.add('glow-breathing');
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>

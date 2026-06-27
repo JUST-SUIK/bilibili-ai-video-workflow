@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>痛点：写周报的痛苦</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            background: #1a0d08;
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* Letterbox黑边 */
+        .letterbox-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 140px;
+            background: #000000;
+            z-index: 10;
+        }
+
+        .letterbox-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 140px;
+            background: #000000;
+            z-index: 10;
+        }
+
+        /* 胶片漏光效果 */
+        .light-leak {
+            position: absolute;
+            border-radius: 50%;
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+        .light-leak-1 {
+            top: -10%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(ellipse, rgba(255, 181, 71, 0.4) 0%, transparent 60%);
+            animation: floatLeak1 12s ease-in-out infinite;
+        }
+
+        .light-leak-2 {
+            bottom: -15%;
+            left: -5%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(ellipse, rgba(217, 119, 87, 0.3) 0%, transparent 60%);
+            animation: floatLeak2 15s ease-in-out infinite;
+        }
+
+        .light-leak-3 {
+            top: 20%;
+            left: 30%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(255, 181, 71, 0.2) 0%, transparent 60%);
+            animation: floatLeak3 18s ease-in-out infinite;
+        }
+
+        @keyframes floatLeak1 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, 20px); }
+        }
+
+        @keyframes floatLeak2 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, -30px); }
+        }
+
+        @keyframes floatLeak3 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-20px, -20px); }
+        }
+
+        /* 35mm颗粒噪点 */
+        .grain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.14'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* 胶片划痕 */
+        .film-scratch {
+            position: absolute;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            z-index: 6;
+        }
+
+        .scratch-1 { left: 15%; }
+        .scratch-2 { left: 45%; }
+        .scratch-3 { left: 78%; }
+
+        /* 主容器 */
+        .cinema-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            padding: 140px 100px;
+        }
+
+        /* 帧标题 */
+        .frame-header {
+            position: absolute;
+            top: 160px;
+            left: 60px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(245, 233, 214, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+        }
+
+        /* 场景标题 */
+        .scene-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 5vw;
+            font-weight: 700;
+            color: #f5e9d6;
+            line-height: 1.3;
+            text-align: center;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeInTitle 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards;
+        }
+
+        @keyframes fadeInTitle {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 痛点场景展示 */
+        .pain-scene {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* 场景卡片 */
+        .scene-card {
+            background: rgba(26, 13, 8, 0.8);
+            border: 1px solid rgba(245, 233, 214, 0.1);
+            border-radius: 12px;
+            padding: 30px 40px;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .scene-card:nth-child(1) {
+            animation: fadeInCard 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s forwards;
+        }
+
+        .scene-card:nth-child(2) {
+            animation: fadeInCard 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s forwards;
+        }
+
+        .scene-card:nth-child(3) {
+            animation: fadeInCard 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards;
+        }
+
+        .scene-card:nth-child(4) {
+            animation: fadeInCard 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.4s forwards;
+        }
+
+        @keyframes fadeInCard {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scene-card .emoji {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .scene-card h3 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #f5e9d6;
+            margin-bottom: 12px;
+        }
+
+        .scene-card p {
+            font-size: 20px;
+            color: rgba(245, 233, 214, 0.8);
+            line-height: 1.6;
+        }
+
+        /* 文字对比动画 */
+        .text-comparison {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            opacity: 0;
+            animation: fadeInComparison 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards;
+        }
+
+        @keyframes fadeInComparison {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .text-old {
+            font-size: 24px;
+            color: #ef4444;
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        .text-arrow {
+            font-size: 32px;
+            color: #F59E0B;
+        }
+
+        .text-new {
+            font-size: 24px;
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        /* 弹幕关键词 */
+        .danmaku-keywords {
+            position: absolute;
+            bottom: 200px;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            overflow: hidden;
+        }
+
+        .keyword {
+            position: absolute;
+            font-size: 18px;
+            font-weight: 500;
+            color: rgba(245, 233, 214, 0.7);
+            white-space: nowrap;
+            animation: floatKeyword 8s linear infinite;
+        }
+
+        .keyword:nth-child(1) {
+            top: 10%;
+            animation-delay: 0s;
+        }
+
+        .keyword:nth-child(2) {
+            top: 40%;
+            animation-delay: 2s;
+        }
+
+        .keyword:nth-child(3) {
+            top: 70%;
+            animation-delay: 4s;
+        }
+
+        @keyframes floatKeyword {
+            0% {
+                transform: translateX(100vw);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
+
+        /* Timecode */
+        .timecode {
+            position: absolute;
+            bottom: 160px;
+            right: 60px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: rgba(245, 233, 214, 0.4);
+            z-index: 11;
+        }
+
+        /* 胶片齿孔 */
+        .film-perforation {
+            position: absolute;
+            top: 140px;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px,
+                transparent 40px,
+                rgba(255, 255, 255, 0.1) 40px,
+                rgba(255, 255, 255, 0.1) 48px
+            );
+            z-index: 11;
+        }
+
+        .film-perforation-bottom {
+            position: absolute;
+            bottom: 140px;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px,
+                transparent 40px,
+                rgba(255, 255, 255, 0.1) 40px,
+                rgba(255, 255, 255, 0.1) 48px
+            );
+            z-index: 11;
+        }
+
+        /* 减少动画模式 */
+        @media (prefers-reduced-motion: reduce) {
+            .light-leak {
+                animation: none;
+            }
+            .scene-card {
+                opacity: 1;
+                transform: none;
+                animation: none;
+            }
+            .text-comparison {
+                opacity: 1;
+                animation: none;
+            }
+            .keyword {
+                animation: none;
+                opacity: 0.7;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Letterbox黑边 -->
+    <div class="letterbox-top"></div>
+    <div class="letterbox-bottom"></div>
+
+    <!-- 胶片齿孔 -->
+    <div class="film-perforation"></div>
+    <div class="film-perforation-bottom"></div>
+
+    <!-- 胶片漏光 -->
+    <div class="light-leak light-leak-1"></div>
+    <div class="light-leak light-leak-2"></div>
+    <div class="light-leak light-leak-3"></div>
+
+    <!-- 颗粒噪点 -->
+    <div class="grain"></div>
+
+    <!-- 胶片划痕 -->
+    <div class="film-scratch scratch-1"></div>
+    <div class="film-scratch scratch-2"></div>
+    <div class="film-scratch scratch-3"></div>
+
+    <!-- 主容器 -->
+    <div class="cinema-container">
+        <!-- 帧标题 -->
+        <div class="frame-header">REEL 02 · CH I · 2026</div>
+
+        <!-- 场景标题 -->
+        <h1 class="scene-title">周五下午四点的噩梦</h1>
+
+        <!-- 痛点场景 -->
+        <div class="pain-scene">
+            <div class="scene-card">
+                <div class="emoji">😤</div>
+                <h3>空白文档的恐惧</h3>
+                <p>打开电脑，光标闪烁，脑子一片空白——这周到底干了啥？</p>
+            </div>
+
+            <div class="scene-card">
+                <div class="emoji">🔍</div>
+                <h3>疯狂翻找素材</h3>
+                <p>翻聊天记录、翻邮件、翻日历，花了半小时终于凑齐素材</p>
+            </div>
+
+            <div class="scene-card">
+                <div class="emoji">😩</div>
+                <h3>措辞纠结</h3>
+                <p>"改了几个bug"太low，"修复系统漏洞"又太假，每周都要纠结一次</p>
+            </div>
+
+            <div class="scene-card">
+                <div class="emoji">😭</div>
+                <h3>领导一眼扫过</h3>
+                <p>花了一小时写完，领导扫一眼就过了——这一小时，到底图啥？</p>
+            </div>
+        </div>
+
+        <!-- 文字对比 -->
+        <div class="text-comparison">
+            <span class="text-old">改了几个bug</span>
+            <span class="text-arrow">→</span>
+            <span class="text-new">修复了多个系统漏洞，提升了稳定性</span>
+        </div>
+
+        <!-- 弹幕关键词 -->
+        <div class="danmaku-keywords">
+            <span class="keyword">太真实了</span>
+            <span class="keyword">被监控了</span>
+            <span class="keyword">每周都这样</span>
+        </div>
+
+        <!-- Timecode -->
+        <div class="timecode">00:00:45</div>
+    </div>
+</body>
+</html>

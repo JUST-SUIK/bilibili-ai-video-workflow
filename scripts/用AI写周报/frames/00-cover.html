@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: 'Noto Sans SC', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: #0a0a0f;
+    position: relative;
+  }
+
+  /* 背景网格 */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(67, 97, 238, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(67, 97, 238, 0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridPulse 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite alternate;
+  }
+
+  @keyframes gridPulse {
+    0% { opacity: 0.4; }
+    100% { opacity: 0.8; }
+  }
+
+  /* 渐变光晕 */
+  .glow-1 {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(67, 97, 238, 0.25) 0%, transparent 70%);
+    top: -100px;
+    right: 200px;
+    animation: glowFloat 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite alternate;
+  }
+
+  .glow-2 {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 90, 44, 0.2) 0%, transparent 70%);
+    bottom: -50px;
+    left: 100px;
+    animation: glowFloat 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite alternate-reverse;
+  }
+
+  @keyframes glowFloat {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(30px, -20px) scale(1.1); }
+  }
+
+  /* 右侧装饰区域 */
+  .deco-area {
+    position: absolute;
+    right: 120px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 400px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .deco-stat {
+    text-align: center;
+    opacity: 1;
+  }
+
+  .deco-stat .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 72px;
+    font-weight: 700;
+    color: #ff5a2c;
+    line-height: 1;
+  }
+
+  .deco-stat .label {
+    font-size: 20px;
+    color: rgba(255,255,255,0.6); /* REVIEW: fix - 提升对比度从0.5到0.6 */
+    margin-top: 8px;
+  }
+
+  .deco-divider {
+    width: 60px;
+    height: 2px;
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* 左侧内容区 */
+  .content {
+    position: absolute;
+    left: 120px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 900px;
+    z-index: 10;
+  }
+
+  /* 标签 */
+  .tag {
+    display: inline-block;
+    padding: 8px 20px;
+    background: rgba(67, 97, 238, 0.15);
+    border: 1px solid rgba(67, 97, 238, 0.4);
+    border-radius: 20px;
+    color: #4361ee;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+    min-height: 36px;
+    animation: tagFade 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+  }
+
+  @keyframes tagFade {
+    to { opacity: 1; }
+  }
+
+  /* 主标题 */
+  .title {
+    font-size: 88px;
+    font-weight: 900;
+    line-height: 1.5;
+    color: #ffffff;
+    margin-bottom: 30px;
+    min-height: 270px;
+    animation: titleSlide 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  @keyframes titleSlide {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .title .highlight {
+    color: #ff5a2c;
+    position: relative;
+  }
+
+  .title .highlight::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 90, 44, 0.3);
+    border-radius: 4px;
+    animation: underlineGrow 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards 0.8s;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  @keyframes underlineGrow {
+    to { transform: scaleX(1); }
+  }
+
+  /* 副标题 */
+  .subtitle {
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 400;
+    margin-bottom: 50px;
+    min-height: 48px;
+    animation: subtitleFade 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards 0.4s;
+    opacity: 0;
+  }
+
+  @keyframes subtitleFade {
+    to { opacity: 1; }
+  }
+
+  /* 底部标签行 */
+  .meta-row {
+    display: flex;
+    gap: 16px;
+    animation: metaSlide 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards 0.8s;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  @keyframes metaSlide {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .meta-tag {
+    padding: 10px 24px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 20px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .meta-tag.primary {
+    background: rgba(255, 90, 44, 0.15);
+    border-color: rgba(255, 90, 44, 0.4);
+    color: #ff5a2c;
+    font-weight: 700;
+  }
+
+  /* 装饰元素 - 浮动代码片段 */
+  .float-code {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: rgba(67, 97, 238, 0.4);
+    white-space: nowrap;
+    animation: codeFloat 12s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+    opacity: 0;
+  }
+
+  @keyframes codeFloat {
+    0% { opacity: 0; transform: translateY(0); }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.6; }
+    100% { opacity: 0; transform: translateY(-200px); }
+  }
+
+  .float-code:nth-child(1) { left: 50px; top: 100px; animation-delay: 0s; }
+  .float-code:nth-child(2) { left: 300px; top: 900px; animation-delay: 2s; }
+  .float-code:nth-child(3) { right: 600px; top: 200px; animation-delay: 4s; }
+  .float-code:nth-child(4) { left: 800px; bottom: 100px; animation-delay: 6s; }
+
+  /* 底部渐变条 */
+  .bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #4361ee, #ff5a2c, #4361ee);
+    background-size: 200% 100%;
+    animation: barFlow 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  }
+
+  @keyframes barFlow {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+  }
+
+  /* 品牌标识 */
+  .brand {
+    position: absolute;
+    bottom: 40px;
+    right: 60px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.5); /* REVIEW: fix - 提升对比度从0.4到0.5 */
+    font-size: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    animation: brandFade 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards 1.2s;
+    opacity: 0;
+  }
+
+  @keyframes brandFade {
+    to { opacity: 1; }
+  }
+
+  .brand-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4361ee;
+    animation: dotPulse 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  }
+
+  @keyframes dotPulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  /* prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .px { opacity: 1; }
+    .title, .tag, .subtitle, .meta-row, .brand { opacity: 1; transform: none; }
+    .title .highlight::after { transform: scaleX(1); }
+  }
+</style>
+</head>
+<body>
+  <!-- 背景 -->
+  <div class="grid-bg"></div>
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+
+  <!-- 浮动代码装饰 -->
+  <div class="float-code">const report = await ai.generate(prompt)</div>
+  <div class="float-code">// 10分钟搞定一周周报</div>
+  <div class="float-code">prompt: "帮我整理成工作周报"</div>
+  <div class="float-code">return { status: "done", time: "10min" }</div>
+
+  <!-- 左侧内容 -->
+  <div class="content">
+    <div class="tag">AI 实战教程</div>
+    <div class="title">
+      用AI<span class="highlight">10分钟</span><br>
+      写完一周周报
+    </div>
+    <div class="subtitle">附万能Prompt模板 · 打工人直接抄</div>
+    <div class="meta-row">
+      <span class="meta-tag primary">Prompt模板 × 3</span>
+      <span class="meta-tag">实操演示</span>
+      <span class="meta-tag">Before / After</span>
+    </div>
+  </div>
+
+  <!-- 右侧装饰 -->
+  <div class="deco-area">
+    <div class="deco-stat">
+      <div class="num">10min</div>
+      <div class="label">从2小时压缩到</div>
+    </div>
+    <div class="deco-divider"></div>
+    <div class="deco-stat">
+      <div class="num">×3</div>
+      <div class="label">万能Prompt模板</div>
+    </div>
+  </div>
+
+  <!-- 底部渐变条 -->
+  <div class="bottom-bar"></div>
+
+  <!-- 品牌标识 -->
+  <div class="brand">
+    <div class="brand-dot"></div>
+    AI学习之路
+  </div>
+
+<script>
+// 封面页无需JS，所有内容立即显示
+</script>
+<!-- REVIEW: PASSED -->
+</body>
+</html>

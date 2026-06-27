@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>验证：Before/After对比</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Caveat:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            background: #0d0d14;
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* 分屏容器 */
+        .voltage-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            position: relative;
+        }
+
+        /* 左侧蓝色屏 */
+        .panel-electric {
+            width: 47%;
+            height: 100%;
+            background: #2f4bff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transform: translateX(-100%);
+            animation: slideInLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* 右侧暗色屏 */
+        .panel-dark {
+            width: 53%;
+            height: 100%;
+            background: #0d0d14;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            padding: 60px 80px;
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 2;
+            opacity: 0;
+            transform: translateX(100%);
+            animation: slideInRight 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.25s forwards;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* 电光高光 */
+        .electric-wash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(111, 134, 255, 0.3) 0%, transparent 70%);
+            z-index: 3;
+            opacity: 0;
+            animation: fadeInWash 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.9s forwards;
+        }
+
+        @keyframes fadeInWash {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 左侧内容 */
+        .left-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+        }
+
+        /* Before标签 */
+        .before-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            padding: 8px 20px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            opacity: 0;
+            animation: fadeInLabel 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.0s forwards;
+        }
+
+        @keyframes fadeInLabel {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Before内容 */
+        .before-content {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            opacity: 0;
+            animation: fadeInContent 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.3s forwards;
+        }
+
+        @keyframes fadeInContent {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .before-text {
+            font-size: 24px;
+            color: #FFFFFF;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .before-tag {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: #ef4444;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        /* 右侧内容 */
+        .right-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 30px;
+            width: 100%;
+        }
+
+        /* After标签 */
+        .after-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            padding: 8px 20px;
+            background: rgba(34, 197, 94, 0.2);
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            opacity: 0;
+            animation: fadeInLabel 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s forwards;
+        }
+
+        /* After内容 */
+        .after-content {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid rgba(34, 197, 94, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            opacity: 0;
+            animation: fadeInContent 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards;
+        }
+
+        .after-text {
+            font-size: 24px;
+            color: #FFFFFF;
+            line-height: 1.8;
+            text-align: right;
+        }
+
+        .after-highlight {
+            color: #22c55e;
+            font-weight: 600;
+        }
+
+        .after-tag {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: #22c55e;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        /* 金句动画 */
+        .golden-quote {
+            position: absolute;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 5;
+            opacity: 0;
+            animation: fadeInQuote 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.5s forwards;
+        }
+
+        @keyframes fadeInQuote {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .quote-text {
+            font-family: 'Caveat', cursive;
+            font-size: 48px;
+            font-weight: 700;
+            color: #FFFFFF;
+            line-height: 1.4;
+        }
+
+        .quote-highlight {
+            color: #6f86ff;
+            -webkit-text-stroke: 2px #6f86ff;
+        }
+
+        /* 手写下划线 */
+        .hand-underline {
+            position: absolute;
+            bottom: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 4px;
+            background: #6f86ff;
+            z-index: 5;
+            animation: drawUnderline 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.0s forwards;
+        }
+
+        @keyframes drawUnderline {
+            from {
+                width: 0;
+            }
+            to {
+                width: 600px;
+            }
+        }
+
+        /* 底部强调 */
+        .bottom-emphasis {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            font-weight: 600;
+            color: #FFFFFF;
+            z-index: 5;
+            opacity: 0;
+            animation: fadeInEmphasis 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.5s forwards;
+        }
+
+        @keyframes fadeInEmphasis {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* 右下mono caption */
+        .caption {
+            position: absolute;
+            bottom: 40px;
+            right: 60px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            z-index: 5;
+            opacity: 0;
+            animation: fadeInCaption 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.2s forwards;
+        }
+
+        @keyframes fadeInCaption {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 减少动画模式 */
+        @media (prefers-reduced-motion: reduce) {
+            .panel-electric,
+            .panel-dark {
+                opacity: 1;
+                transform: none;
+                animation: none;
+            }
+            .electric-wash,
+            .before-label,
+            .before-content,
+            .after-label,
+            .after-content,
+            .golden-quote,
+            .bottom-emphasis,
+            .caption {
+                opacity: 1;
+                animation: none;
+            }
+            .hand-underline {
+                width: 600px;
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 分屏容器 -->
+    <div class="voltage-container">
+        <!-- 左侧蓝色屏 -->
+        <div class="panel-electric">
+            <!-- 电光高光 -->
+            <div class="electric-wash"></div>
+
+            <div class="left-content">
+                <!-- Before标签 -->
+                <div class="before-label">BEFORE</div>
+
+                <!-- Before内容 -->
+                <div class="before-content">
+                    <p class="before-text">
+                        周一开会<br>
+                        周三交方案<br>
+                        周四帮同事解决问题
+                    </p>
+                    <span class="before-tag">流水账</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧暗色屏 -->
+        <div class="panel-dark">
+            <div class="right-content">
+                <!-- After标签 -->
+                <div class="after-label">AFTER</div>
+
+                <!-- After内容 -->
+                <div class="after-content">
+                    <p class="after-text">
+                        本周<span class="after-highlight">重点推进Q3目标对齐</span>，<br>
+                        完成产品方案V2交付，<br>
+                        <span class="after-highlight">顺手帮同事解决了服务器问题</span>。
+                    </p>
+                    <span class="after-tag">专业表达</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 金句动画 -->
+        <div class="golden-quote">
+            <p class="quote-text">
+                你负责<span class="quote-highlight">做了什么</span><br>
+                AI负责<span class="quote-highlight">怎么说</span>
+            </p>
+        </div>
+
+        <!-- 手写下划线 -->
+        <div class="hand-underline"></div>
+
+        <!-- 底部强调 -->
+        <div class="bottom-emphasis">这就是AI写周报的正确用法</div>
+
+        <!-- 右下caption -->
+        <div class="caption">FRAME 06 · COMPARISON</div>
+    </div>
+</body>
+</html>

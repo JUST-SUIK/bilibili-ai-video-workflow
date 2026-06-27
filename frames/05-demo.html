@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核心方案3：实操演示</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Archivo+Black:wght@400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* 主容器 */
+        .signal-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            position: relative;
+        }
+
+        /* 左侧区域 */
+        .left-section {
+            width: 400px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 60px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 大编号 */
+        .section-number {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 96px;
+            font-weight: 900;
+            color: #FFFFFF;
+            line-height: 1;
+            opacity: 0;
+            animation: rollInNumber 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s forwards;
+        }
+
+        @keyframes rollInNumber {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) rotate(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(0);
+            }
+        }
+
+        .section-number .slash {
+            opacity: 0.3;
+        }
+
+        /* 导航面包屑 */
+        .nav-breadcrumb {
+            position: absolute;
+            top: 60px;
+            right: 60px;
+            display: flex;
+            gap: 20px;
+            z-index: 3;
+        }
+
+        .nav-item {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0;
+        }
+
+        .nav-item:nth-child(1) {
+            color: #FF5722;
+            opacity: 1;
+            animation: fadeInNav 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s forwards;
+        }
+
+        .nav-item:nth-child(2) {
+            color: rgba(255, 255, 255, 0.35);
+            animation: fadeInNav 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s forwards;
+        }
+
+        .nav-item:nth-child(3) {
+            color: rgba(255, 255, 255, 0.35);
+            animation: fadeInNav 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s forwards;
+        }
+
+        @keyframes fadeInNav {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 橙色焦点卡 */
+        .focus-card {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1180px;
+            height: 100%;
+            background: #FF5722;
+            border-radius: 36px 0 0 36px;
+            z-index: 2;
+            opacity: 0;
+            transform: translateX(110%);
+            animation: slideInCard 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s forwards;
+            box-shadow: -20px 0 60px rgba(255, 87, 34, 0.3);
+        }
+
+        @keyframes slideInCard {
+            from {
+                opacity: 0;
+                transform: translateX(110%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* 卡片内容 */
+        .card-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px 100px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .card-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(26, 26, 26, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 24px;
+            opacity: 0;
+            animation: fadeInLabel 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.15s forwards;
+        }
+
+        @keyframes fadeInLabel {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-title {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 130px;
+            font-weight: 900;
+            color: #1a1a1a;
+            line-height: 1.1;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeInTitle 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.3s forwards;
+        }
+
+        @keyframes fadeInTitle {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 演示内容 */
+        .demo-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* 关键词输入 */
+        .keyword-input {
+            background: rgba(26, 26, 26, 0.9);
+            border-radius: 16px;
+            padding: 30px;
+            opacity: 0;
+            animation: fadeInDemo 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards;
+        }
+
+        @keyframes fadeInDemo {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .input-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #FF5722;
+        }
+
+        .input-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+        }
+
+        .keyword-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .keyword-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .keyword-item:nth-child(1) {
+            animation: fadeInKeyword 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.2s forwards;
+        }
+
+        .keyword-item:nth-child(2) {
+            animation: fadeInKeyword 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.4s forwards;
+        }
+
+        .keyword-item:nth-child(3) {
+            animation: fadeInKeyword 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.6s forwards;
+        }
+
+        .keyword-item:nth-child(4) {
+            animation: fadeInKeyword 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.8s forwards;
+        }
+
+        @keyframes fadeInKeyword {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .keyword-day {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #FF5722;
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        .keyword-text {
+            font-size: 18px;
+            color: #FFFFFF;
+        }
+
+        /* AI输出 */
+        .ai-output {
+            background: rgba(26, 26, 26, 0.9);
+            border-radius: 16px;
+            padding: 30px;
+            opacity: 0;
+            animation: fadeInDemo 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.2s forwards;
+        }
+
+        .output-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .output-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4CAF50;
+        }
+
+        .output-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+        }
+
+        .output-text {
+            font-size: 18px;
+            color: #FFFFFF;
+            line-height: 1.6;
+        }
+
+        .output-highlight {
+            color: #FF5722;
+            font-weight: 600;
+        }
+
+        /* 效率标注 */
+        .efficiency-badge {
+            position: absolute;
+            bottom: 80px;
+            right: 100px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 30px;
+            background: rgba(26, 26, 26, 0.9);
+            border-radius: 12px;
+            border: 2px solid #FF5722;
+            z-index: 4;
+            opacity: 0;
+            animation: fadeInBadge 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 4s forwards;
+        }
+
+        @keyframes fadeInBadge {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .badge-icon {
+            font-size: 32px;
+        }
+
+        .badge-text {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: #FF5722;
+        }
+
+        /* 底部footer */
+        .footer {
+            position: absolute;
+            bottom: 60px;
+            left: 60px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 4;
+            opacity: 0;
+            animation: fadeInFooter 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.6s forwards;
+        }
+
+        @keyframes fadeInFooter {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .footer-tick {
+            width: 24px;
+            height: 3px;
+            background: #FF5722;
+        }
+
+        .footer-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* 减少动画模式 */
+        @media (prefers-reduced-motion: reduce) {
+            .section-number,
+            .nav-item,
+            .focus-card,
+            .card-label,
+            .card-title,
+            .keyword-input,
+            .ai-output,
+            .keyword-item,
+            .efficiency-badge,
+            .footer {
+                opacity: 1;
+                transform: none;
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="signal-container">
+        <!-- 左侧区域 -->
+        <div class="left-section">
+            <!-- 大编号 -->
+            <div class="section-number">03<span class="slash">/</span>04</div>
+        </div>
+
+        <!-- 导航面包屑 -->
+        <div class="nav-breadcrumb">
+            <span class="nav-item">方法论</span>
+            <span class="nav-item">·</span>
+            <span class="nav-item">实操演示</span>
+        </div>
+
+        <!-- 橙色焦点卡 -->
+        <div class="focus-card"></div>
+
+        <!-- 卡片内容 -->
+        <div class="card-content">
+            <span class="card-label">实操演示</span>
+            <h1 class="card-title">10分钟<br>搞定周报</h1>
+
+            <!-- 演示内容 -->
+            <div class="demo-content">
+                <!-- 关键词输入 -->
+                <div class="keyword-input">
+                    <div class="input-header">
+                        <div class="input-dot"></div>
+                        <span class="input-label">我的工作关键词</span>
+                    </div>
+                    <div class="keyword-list">
+                        <div class="keyword-item">
+                            <span class="keyword-day">周一</span>
+                            <span class="keyword-text">Q3目标会议</span>
+                        </div>
+                        <div class="keyword-item">
+                            <span class="keyword-day">周三</span>
+                            <span class="keyword-text">交付产品方案V2</span>
+                        </div>
+                        <div class="keyword-item">
+                            <span class="keyword-day">周四</span>
+                            <span class="keyword-text">帮小王解决服务器问题</span>
+                        </div>
+                        <div class="keyword-item">
+                            <span class="keyword-day">周五</span>
+                            <span class="keyword-text">客户需求评审</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI输出 -->
+                <div class="ai-output">
+                    <div class="output-header">
+                        <div class="output-dot"></div>
+                        <span class="output-label">AI生成结果</span>
+                    </div>
+                    <p class="output-text">
+                        本周<span class="output-highlight">重点推进Q3目标对齐</span>，完成产品方案V2交付，
+                        <span class="output-highlight">顺手帮同事解决了服务器问题</span>，
+                        并完成客户需求评审。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 效率标注 -->
+        <div class="efficiency-badge">
+            <span class="badge-icon">⚡</span>
+            <span class="badge-text">10分钟搞定</span>
+        </div>
+
+        <!-- 底部footer -->
+        <div class="footer">
+            <div class="footer-tick"></div>
+            <span class="footer-label">AI写周报 · 实操演示</span>
+        </div>
+    </div>
+</body>
+</html>
