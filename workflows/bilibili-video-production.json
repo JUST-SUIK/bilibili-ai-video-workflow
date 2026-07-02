@@ -1,34 +1,52 @@
 {
   "id": "bilibili-video-production",
   "name": "bilibili-video-production",
-  "description": "B站AI知识分享视频制作全流程。6阶段各配独立审查Agent+5次重试自动升级。HTML帧+TTS并行生产。父级编排Agent生成Production Brief共享上下文。v1.2整合踩坑记录：暗色统一、字体≥18px、动画同步、音色个性、白屏修复、中文路径处理。",
-  "version": "1.2.0",
+  "description": "B站AI知识分享视频制作全流程。v2.1.1：全阶段红队审查覆盖 + AND-join并行汇合 + 文案级重试次数提示。攻击→防御闭环，PASS=零CRITICAL+零HIGH+<3MEDIUM。已知限制：AND-join无引擎级同步语义（prompt节点模拟），重试计数器为用户提示（非引擎强制执行），上下文传递依赖对话历史（非显式注入）。技术约束：暗色统一、字体≥18px、禁Inter、动画同步、voicedesign音色、1.5s静音。",
+  "version": "2.1.1",
   "nodes": [
     {
       "id": "start-1",
       "type": "start",
       "name": "start",
-      "position": { "x": 100, "y": 350 },
-      "data": { "label": "开始制作视频" }
+      "position": {
+        "x": 100,
+        "y": 350
+      },
+      "data": {
+        "label": "开始制作视频"
+      }
     },
     {
       "id": "g1-topic",
       "type": "group",
       "name": "topic-group",
-      "position": { "x": 280, "y": 100 },
-      "style": { "width": 620, "height": 450 },
-      "data": { "label": "1.选题策划" }
+      "position": {
+        "x": 280,
+        "y": 100
+      },
+      "style": {
+        "width": 620,
+        "height": 450
+      },
+      "data": {
+        "label": "1.选题策划"
+      }
     },
     {
       "id": "prompt-topic",
       "type": "prompt",
       "name": "topic-input",
       "parentId": "g1-topic",
-      "position": { "x": 40, "y": 50 },
+      "position": {
+        "x": 40,
+        "y": 50
+      },
       "data": {
         "label": "输入视频主题意向",
         "prompt": "请确认你想制作的视频主题方向。\n\n你可以从选题库中选择（docs/02-选题方向.md，含21个选题），或提出新选题。\n\n选题库覆盖：入门科普(9题)、实战教程(8题)、深度分析(4题)。\n\n输入你的选题意向：",
-        "variables": { "topic": "" }
+        "variables": {
+          "topic": ""
+        }
       }
     },
     {
@@ -36,11 +54,14 @@
       "type": "subAgent",
       "name": "trending-analysis",
       "parentId": "g1-topic",
-      "position": { "x": 40, "y": 200 },
+      "position": {
+        "x": 40,
+        "y": 200
+      },
       "data": {
-        "description": "分析B站当下AI知识区热榜趋势",
-        "agentDefinition": "分析B站AI知识区的热榜趋势，为选题提供市场维度参考。",
-        "prompt": "分析B站AI知识区的当下热榜趋势，为选题提供参考。\n\n## 分析维度\n1. 近期热门的AI话题和标签\n2. 内容缺口：哪些方向需求大但供给少\n3. 选题建议：结合用户意向给2-3个具体建议\n\n## 输出\n- **热门趋势**（3-5个）\n- **内容缺口**（2-3个）\n- **选题建议**（2-3个，含热度预估：高/中/低）",
+        "description": "深度分析B站AI知识区热榜趋势、竞争格局、内容缺口",
+        "agentDefinition": "B站AI知识区热榜分析Agent。多维度扫描当下趋势：热门话题、上升赛道、内容缺口、竞品动态。为选题决策提供数据驱动的市场洞察。",
+        "prompt": "深度分析B站AI知识区的当下趋势和竞争格局，为选题决策提供数据支撑。\n\n## 分析方法论\n请同时使用以下方法交叉验证（不要只依赖一种信息来源）：\n1. **搜索验证**：在B站搜索\"AI\"\"大模型\"\"ChatGPT\"\"人工智能\"等核心词，观察综合排序前20的视频特征\n2. **热门标签追踪**：观察 #AI #大模型 #人工智能 #科技 标签下的近期热门内容\n3. **竞品频道分析**：关注 AI 知识区头部UP主（如\"跟李沐学AI\"等）的近期内容走向\n4. **评论区挖掘**：热门AI视频的评论区高频问题和需求（代表观众真实痛点）\n\n## 🎯 分析维度\n\n### 一、热门话题矩阵（核心输出）\n按「热度×竞争度」二维矩阵分类：\n\n| 话题 | 热度 | 竞争度 | 上升/下降趋势 | 视频平均播放量 | 代表UP主 |\n|------|------|--------|:--:|:--:|------|\n\n**热度**：近30天相关视频数量+平均播放量趋势\n**竞争度**：头部UP主覆盖密度（高=被大UP主垄断）\n**趋势**：↗上升 / →平稳 / ↘下降\n\n至少输出 5-8 个具体话题，按优先级排序。\n\n### 二、内容缺口分析（必出）\n找到「需求大但供给不足」的方向：\n- **入门级缺口**：零基础小白想学AI，现有视频是否讲得太深/太浅？\n- **深度级缺口**：从业者想进阶，是否有足够的深度内容？\n- **视角缺口**：现有内容是否千篇一律（都在讲同一个角度）？本频道能用什么差异化视角切入？\n- **时效性缺口**：近期AI圈发生了什么大事，但B站还没人做深度解读？\n\n每个缺口标注：需求热度（高/中/低）× 内容稀缺度（稀缺/一般/饱和）\n\n### 三、竞品动态扫描\n- 近期播放量爆发（>50万）的AI知识视频：标题特征、内容结构、评论区反馈\n- 头部UP主的新内容方向（是否预示新的热门赛道）\n- 哪些选题类型的弹幕互动率最高（教程/科普/观点/评测）？\n\n### 四、观众需求挖掘\n- 从近30天热门AI视频的评论/弹幕中，提取观众反复问的问题\n- 哪些概念观众普遍理解错误（= 做纠正类视频的机会）\n- 哪些AI工具/产品近期被频繁提及（= 做评测/教程的机会）\n\n## 📊 输出格式\n\n```\n## 🔥 热门话题矩阵（5-8个）\n| 话题 | 热度 | 竞争度 | 趋势 | 平均播放 |\n|------|------|--------|------|---------|\n\n## 🕳️ 内容缺口（至少3个）\n| 缺口方向 | 需求热度 | 内容稀缺度 | 机会评分 | 建议选题 |\n|---------|---------|-----------|---------|---------|\n\n## 📈 竞品动态（3-5个关键发现）\n\n## 💬 观众需求（高频问题/误解 5-8个）\n\n## 🎯 选题推荐（结合用户意向，2-3个具体选题）\n每个选题含：标题建议、所属系列、预估热度、差异化角度、制作难度\n```\n\n完成后标注：TRENDING_COMPLETE。",
         "builtInType": "explore",
         "agentType": "claudeCode",
         "outputPorts": 1
@@ -51,11 +72,14 @@
       "type": "subAgent",
       "name": "topic-library-match",
       "parentId": "g1-topic",
-      "position": { "x": 40, "y": 350 },
+      "position": {
+        "x": 40,
+        "y": 350
+      },
       "data": {
-        "description": "读取选题库匹配最佳选题",
-        "agentDefinition": "读取docs/02-选题方向.md选题库，结合热榜分析推荐最佳选题。",
-        "prompt": "请读取 docs/02-选题方向.md 和 docs/01-项目总览.md，结合热榜分析结果推荐最佳选题。\n\n## 输出\n- **推荐选题**（3个，标注优先级和所属系列）\n- **首选题**：最终推荐及完整理由\n- **制作要点**：核心卖点和注意事项",
+        "description": "读取选题库+热榜分析，多维度评分匹配最佳选题",
+        "agentDefinition": "选题匹配Agent：读取选题库和项目总览，结合热榜分析结果，用多维度评分体系推荐最优选题。不只是匹配——是战略决策。",
+        "prompt": "综合选题库、项目定位和热榜分析，做出最优选题决策。你不仅匹配选题——你做的是内容战略决策。\n\n## 必须读取\n1. docs/02-选题方向.md — 选题库（21个选题，分入门科普/实战教程/深度分析）\n2. docs/01-项目总览.md — 账号定位、目标受众、内容策略\n3. 上方 agent-trending 的热榜分析结果（热门话题矩阵+内容缺口+竞品动态+观众需求）\n\n## 🎯 选题评估框架\n\n用以下 8 个维度为候选选题打分（每项 1-5 分）：\n\n| 维度 | 权重 | 说明 |\n|------|:--:|------|\n| **选题热度** | 5 | 该话题近30天的搜索量和播放量趋势 |\n| **竞争友好度** | 4 | 是否避开头部UP主垄断？（越高=竞争越低，越好做） |\n| **差异化空间** | 5 | 能否用独特视角切入？（\"讲别人没讲过的角度\"） |\n| **内容适配度** | 5 | 是否适合 HPSV 结构（Hook-Pain-Solution-Validation）呈现？ |\n| **视觉呈现力** | 4 | 概念是否容易用 HTML 动画直观展示？（抽象的哲学概念不如具象的工具演示） |\n| **受众覆盖** | 3 | 目标受众（AI 小白→进阶用户）中该选题的覆盖范围 |\n| **系列延续性** | 3 | 能否自然引出后续选题？（系列视频的连贯性） |\n| **制作可行性** | 4 | 脚本撰写难度、素材获取难度、技术准确性验证难度 |\n\n> 权重 5 = 关键决策因子，权重 3 = 加分项\n\n## 🔍 候选选题筛选流程\n\n### 第1步：初筛（从选题库+热榜缺口选出5-8个候选）\n- 从选题库中选取与当下热榜趋势最匹配的选题\n- 从热榜分析的内容缺口中提炼新选题（选题库之外的）\n- 标注每个候选的来源（选题库编号 或 热榜缺口）\n\n### 第2步：逐维度打分\n对每个候选选题在8个维度上打分，附简要理由。\n\n### 第3步：加权排名\n计算加权总分 = Σ(维度分 × 权重) / Σ权重\n排序并输出 Top 3。\n\n### 第4步：首选题深度论证\n对排名第1的选题做深度论证。\n\n## ⚠️ 选题避坑清单（必须考虑）\n\n**以下类型选题应当降低评分或直接排除：**\n- ❌ **纯观点输出型**：没有具体知识/技能传授，纯粹表达观点（不适合知识分享定位）\n- ❌ **过气话题**：热度趋势↘且超过3个月的话题（\"GPT-4发布\"早已过时）\n- ❌ **无法可视化**：内容太抽象，用HTML动画难以呈现（如\"AI的哲学意义\"）\n- ❌ **争议敏感型**：涉及政治/社会争议（AI取代人类导致失业焦虑等）——可以做但风险高\n- ❌ **一次性话题**：讲完没有后续内容可延伸（不利于做系列）\n- ⚠️ **大UP主垄断型**：头部UP主已出多个同主题视频——除非你有压倒性差异角度\n\n## 📊 输出格式\n\n```\n## 📋 候选选题池（5-8个）\n| # | 选题 | 来源 | 所属系列 | 一句话差异化角度 |\n|---|------|------|---------|-----------------|\n\n## 📊 多维度评分（Top 5）\n| 选题 | 热度(5) | 竞争(4) | 差异(5) | HPSV(5) | 视觉(4) | 受众(3) | 系列(3) | 可行(4) | 加权分 |\n|------|---------|---------|---------|---------|---------|---------|---------|---------|--------|\n\n## 🥇 首选题深度论证\n\n### 选题全称\n\n### 为什么选它（3个核心理由）\n1.\n2.\n3.\n\n### HPSV 适配分析\n- **Hook（钩子）**：可以怎么切入？（反直觉角度是什么？）\n- **Pain（痛点）**：观众为什么需要知道这个？\n- **Solution（方案）**：核心知识点有哪些？\n- **Validation（验证）**：如何让观众相信？（演示/对比/数据？）\n\n### 差异化角度\n市场上已有的内容都是什么角度？我们的突破口是什么？\n\n### 预估数据\n- 目标时长：X 分钟\n- 预期难度：★★★☆☆（1-5星）\n- 预估播放量区间（基于同类视频数据）\n- 预估完播率\n\n### 后续选题延伸\n这个视频做完后，可以自然引出哪些后续内容？\n\n### 风险提示\n- 制作难点\n- 信息准确性风险\n- 时效性考量（这个话题多久后会过时？）\n\n## 🥈 备选1（同上结构，简略版）\n\n## 🥉 备选2（同上结构，简略版）\n\n## 💡 额外建议\n（如果有选题库之外的新选题灵感，在此提出）\n```\n\n完成后标注：TOPIC_MATCHED。",
         "builtInType": "explore",
         "agentType": "claudeCode",
         "outputPorts": 1
@@ -66,12 +90,23 @@
       "type": "askUserQuestion",
       "name": "topic-confirm",
       "parentId": "g1-topic",
-      "position": { "x": 250, "y": 380 },
+      "position": {
+        "x": 250,
+        "y": 380
+      },
       "data": {
         "questionText": "确认最终选题？",
         "options": [
-          { "label": "确认，开始制作", "description": "采用AI推荐的选题", "id": "opt-topic-ok" },
-          { "label": "我另外指定", "description": "我自己指定选题标题", "id": "opt-topic-custom" }
+          {
+            "label": "确认，开始制作",
+            "description": "采用AI推荐的选题",
+            "id": "opt-topic-ok"
+          },
+          {
+            "label": "我另外指定",
+            "description": "我自己指定选题标题",
+            "id": "opt-topic-custom"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -83,31 +118,47 @@
       "type": "prompt",
       "name": "topic-custom",
       "parentId": "g1-topic",
-      "position": { "x": 330, "y": 200 },
+      "position": {
+        "x": 330,
+        "y": 200
+      },
       "data": {
-        "label": "指定选题",
-        "prompt": "请输入你要制作的具体选题标题和方向：",
-        "variables": { "topic": "" }
+        "label": "自定义选题（⚠️跳过热榜分析）",
+        "prompt": "你选择了跳过趋势分析和多维度评分匹配，直接指定选题。潜在风险：该选题可能热度不足或已被大UP主垄断，且未经8维度评估。请确认该选题是否适合HPSV结构和动画呈现。请输入你要制作的具体选题：",
+        "variables": {
+          "topic": ""
+        }
       }
     },
     {
       "id": "g2-orch",
       "type": "group",
       "name": "orch-group",
-      "position": { "x": 930, "y": 100 },
-      "style": { "width": 420, "height": 450 },
-      "data": { "label": "2.父级编排" }
+      "position": {
+        "x": 930,
+        "y": 100
+      },
+      "style": {
+        "width": 420,
+        "height": 450
+      },
+      "data": {
+        "label": "2.父级编排"
+      }
     },
     {
       "id": "agent-orchestrator",
       "type": "subAgent",
       "name": "parent-orchestrator",
       "parentId": "g2-orch",
-      "position": { "x": 30, "y": 80 },
+      "position": {
+        "x": 30,
+        "y": 80
+      },
       "data": {
-        "description": "读取项目文档生成Production Brief共享上下文",
-        "agentDefinition": "父级编排Agent：读取项目文档生成一份Production Brief，作为所有下游Agent的共享上下文。不替代各Agent自身的prompt，只提供项目级的统一参考信息。",
-        "prompt": "你负责生成一份Production Brief，作为下游所有Agent的共享参考上下文。\n\n## 必须读取\n1. docs/01-项目总览.md — 账号定位和策略\n2. docs/02-选题方向.md — 选题库\n3. docs/04-视频制作流程.md — 技术路线\n4. docs/06-脚本大纲模板.md — 脚本规范\n5. docs/研究-脚本写作方法论.md — HPSV等方法论\n6. docs/workflow-video-production.md — ⚠️ 踩坑记录和设计规范（必须读取）\n7. scripts/[视频名]/style-guide.md — 视觉风格指南\n8. scripts/[视频名]/voice-prompt.md — 音色设计提示词\n9. scripts/01-什么是大语言模型/ — 参考案例\n\n## 输出：Production Brief（不超过800字）\n### 项目摘要\n- 频道定位、目标受众、内容风格\n\n### 本次选题\n- 选定主题、所属系列、目标时长\n\n### 关键约束（来自踩坑记录）\n- HPSV结构要求、爆点密度(≥4个)\n- HTML动画帧路线（14个可用模板）\n- **全片统一暗色风格**，禁止白色/浅色页面\n- **字体最小18px**，禁止使用Inter字体\n- **动画延迟匹配音频**，文字不能比旁白先出现\n- MiMo TTS音色设计路线（voicedesign模型，有个性有口音）\n- **每段音频加1.5s静音间隔**\n- 不露脸，动画+旁白形式\n\n### 阶段速览\n- 脚本阶段：注意HPSV结构完整性\n- 旁白规划：7-10个画面段落，每段40-90秒\n- HTML帧：每帧1920x1080，独立HTML文件，暗色风格\n- TTS：每段独立WAV，音色设计（非声纹克隆），1.5s静音间隔\n- 合成：Playwright录制(color_scheme=dark)+ffmpeg(临时目录处理中文路径)\n- 发布：B站创作中心上传，科技分区\n\n### 注意事项\n- 参考案例路径：scripts/01-什么是大语言模型/\n- 输出目录：scripts/[视频名]/\n- 所有Agent需维护输出产物清单\n- 每次修改HTML后必须视觉审查（visual-review技能）\n\n输出完成后标注：BRIEF_READY。\n\n重要：你的Brief将随执行链传递，每个下游Agent都能访问这份Brief作为上下文参考。各Agent自身已有完整的执行prompt，不需要你重复生成。",
+        "description": "读取项目文档生成Production Brief，整合红队攻击知识库",
+        "agentDefinition": "父级编排Agent：读取项目文档生成Production Brief，作为所有下游Agent的共享上下文。v2.1整合红队测试方法论——为下游红队审查Agent提供历史漏洞知识库和攻击面定义。不替代各Agent自身的prompt，只提供项目级统一参考。",
+        "prompt": "你负责生成一份Production Brief，作为下游所有Agent的共享参考上下文。\n\n## 必须读取\n1. docs/01-项目总览.md — 账号定位和策略\n2. docs/02-选题方向.md — 选题库\n3. docs/04-视频制作流程.md — 技术路线\n4. docs/06-脚本大纲模板.md — 脚本规范\n5. docs/研究-脚本写作方法论.md — HPSV等方法论\n6. docs/workflow-video-production.md — ⚠️ 踩坑记录和设计规范（必须读取）\n7. scripts/[视频名]/style-guide.md — 视觉风格指南\n8. scripts/[视频名]/voice-prompt.md — 音色设计提示词\n9. scripts/01-什么是大语言模型/ — 参考案例\n\n## 输出：Production Brief（不超过1000字）\n### 项目摘要\n- 频道定位、目标受众、内容风格\n\n### 本次选题\n- 选定主题、所属系列、目标时长\n\n### 关键约束（来自踩坑记录）\n- HPSV结构要求、爆点密度(≥4个)\n- HTML动画帧路线（14个可用模板）\n- **全片统一暗色风格**，禁止白色/浅色页面\n- **字体最小18px**，禁止使用Inter字体\n- **动画延迟匹配音频**，文字不能比旁白先出现\n- MiMo TTS音色设计路线（voicedesign模型，有个性有口音）\n- **每段音频加1.5s静音间隔**\n- 不露脸，动画+旁白形式\n\n### 🔴 红队测试框架（v2.0新增）\n本工作流采用红队测试方法论：每个生产阶段配备独立红队攻击Agent，以攻击者视角证明产物会失败。\n\n**攻击判定标准**（全阶段统一）：\n- 🔴 CRITICAL：致命漏洞，视频必定失败 → FAIL\n- 🟠 HIGH：严重缺陷，大概率导致观众流失 → FAIL\n- 🟡 MEDIUM：中等风险 → 累计≥3个则FAIL\n- 🟢 LOW：轻微瑕疵，记录但不影响判定\n- PASS条件：零CRITICAL + 零HIGH + <3个MEDIUM\n\n**攻击增强策略**（重试时递进升级）：\n- 第1轮：基线攻击（基础漏洞扫描）\n- 第2轮：编码增强（换角度/更隐蔽的攻击）\n- 第3轮：对话增强（基于前几轮发现深入挖掘）\n- 第4轮：组合攻击（多维度交叉验证）\n- 第5轮：终极总攻（集中火力打击反复出现的老问题）\n\n**攻击→防御闭环**：每个被发现的漏洞必须附带具体可执行的防御方案（修复建议）。\n\n**历史漏洞知识库**（来自 docs/workflow-video-production.md）：\n下游红队Agent在审查时会自动检查这些已知漏洞是否复发。\n\n### 阶段速览\n- 脚本阶段：HPSV结构，红队攻击维度=逻辑漏洞+事实核查+观众流失+竞品对比+边界测试\n- 旁白规划：7-10个画面段落，每段40-90秒，红队攻击维度=注意力断崖+模板错配+情绪断层+信息过载+转场崩溃\n- HTML帧：每帧1920x1080，暗色风格，红队攻击维度=视觉轰炸+可读性+动画崩溃+注意力劫持+品牌伤害+暗色一致性\n- TTS：音色设计（非声纹克隆），1.5s静音间隔，红队攻击维度=听觉疲劳+注意力流失+底噪+情感错配+口音漂移+静音间隔\n- 合成：Playwright(color_scheme=dark)+ffmpeg(临时目录)，红队攻击维度=音画同步+画质退化+字幕逐字+音量跳变+首帧流失+任意入口\n- 发布：B站创作中心，红队攻击维度=标题党反噬+SEO盲区+缩略图可读性+合规风险+竞品截流\n\n### 注意事项\n- 参考案例路径：scripts/01-什么是大语言模型/\n- 输出目录：scripts/[视频名]/\n- 所有Agent需维护输出产物清单\n- 每次修改HTML后必须视觉审查（visual-review技能）\n- 红队审查报告格式统一为：CRITICAL/HIGH/MEDIUM/LOW四级 + 历史漏洞复发检查 + 攻击→防御闭环\n\n输出完成后标注：BRIEF_READY。\n\n重要：你的Brief将随执行链传递，每个下游Agent都能访问这份Brief作为上下文参考。各Agent自身已有完整的执行prompt，不需要你重复生成。",
         "builtInType": "general-purpose",
         "agentType": "claudeCode",
         "outputPorts": 1
@@ -117,16 +168,27 @@
       "id": "g3-script",
       "type": "group",
       "name": "script-group",
-      "position": { "x": 1380, "y": 100 },
-      "style": { "width": 720, "height": 480 },
-      "data": { "label": "3.脚本撰写与审查" }
+      "position": {
+        "x": 1380,
+        "y": 100
+      },
+      "style": {
+        "width": 720,
+        "height": 480
+      },
+      "data": {
+        "label": "3.脚本撰写与审查"
+      }
     },
     {
       "id": "agent-script",
       "type": "subAgent",
       "name": "script-writer",
       "parentId": "g3-script",
-      "position": { "x": 30, "y": 40 },
+      "position": {
+        "x": 30,
+        "y": 40
+      },
       "data": {
         "description": "撰写完整视频脚本，HPSV结构",
         "agentDefinition": "视频脚本撰写Agent：按HPSV结构撰写5-10分钟视频脚本，预埋4+爆点，口语化+动画适配。",
@@ -141,11 +203,14 @@
       "type": "subAgent",
       "name": "script-reviewer",
       "parentId": "g3-script",
-      "position": { "x": 30, "y": 220 },
+      "position": {
+        "x": 30,
+        "y": 220
+      },
       "data": {
-        "description": "独立审查脚本质量，严禁放水",
-        "agentDefinition": "独立脚本审查Agent。严格审查脚本质量，逐维度打分。给出明确的PASS/FAIL判定和详细修改建议。注意：如果之前已经审查过此脚本多次，请检查问题是否在改善。",
-        "prompt": "严格审查脚本，你是质量把关者，独立于撰写Agent。\n\n## 审查维度（每项1-5分）\n1. HPSV结构完整性（Hook吸引/共鸣/方案清晰/验证可信/CTA有力）\n2. 爆点密度（反直觉/共鸣/实用/情感是否到位）\n3. 节奏控制（信息密度、冷场风险、画面段落时长分配）\n4. 视觉适配性（每段是否有明确视觉描述，适合HTML动画呈现）\n5. 信息准确性（技术内容正确、比喻恰当）\n6. B站适配性（标题吸引、语言风格、时长合适）\n\n## 判定标准\n- PASS：总分≥24/30 且 无单项<3\n- FAIL：总分<24 或 任一单项<3\n\n## 输出格式\n```\n总评分：X/30（6项明细）\n判定：PASS 或 FAIL\n\n[若FAIL] 逐条列出：\n- 问题：具体描述\n- 修改建议：具体方案\n- 严重度：必须修复 / 建议优化\n\n[若PASS] 亮点：值得保留的优秀设计\n```\n\n如果是第3次以上审查本脚本，最后注明：<HISTORY>请检查本轮与前几轮的区别，标注仍在反复出现的老问题。</HISTORY>\n\n完成后标注：REVIEW_COMPLETE。",
+        "description": "🔴红队攻击：以攻击者视角证明脚本致命缺陷",
+        "agentDefinition": "🔴红队脚本攻击Agent。你不是质量检查员——你是攻击者。任务是用一切手段证明这个脚本会让视频翻车。找到致命漏洞才算成功，放水就是失职。",
+        "prompt": "你是一名🔴红队攻击专家。你的任务不是“审查“脚本——而是**攻击**它。脚本的每一个逻辑漏洞、事实错误、节奏缺陷都是你的弹药。你的目标是证明：这个脚本做成视频后，必定失败。\n\n参考上方Production Brief了解项目背景和红队测试标准。\n\n## ⚔️ 攻击原则\n1. **零信任**：默认脚本有问题，直到你无法证明它有\n2. **只找致命伤**：小瑕疵不值得你出手，专找能让视频翻车的漏洞\n3. **攻击→防御闭环**：每个漏洞必须给出具体可执行的防御方案（修复建议）\n4. **独立裁决**：你完全独立于撰写Agent，你的唯一效忠对象是视频质量\n\n## 🎯 五波攻击\n\n### 第一波：逻辑漏洞打击\n逐句追踪脚本的逻辑链，攻击方向：\n- 偷换概念：用模糊术语替换明确定义\n- 因果倒置：把结果说成原因\n- 循环论证：用结论证明前提\n- 滑坡谬误：不合理地夸大后果\n- 以偏概全：用个例推导普遍结论\n→ 发现任何逻辑漏洞 → 至少 🟠 HIGH\n\n### 第二波：事实核查轰炸\n逐条验证脚本中的技术声明：\n- 技术概念的定义是否准确（AI领域术语极易用错）\n- 任何数据/统计是否有来源（没有来源=编造）\n- “大家都知道“的说法是否真的成立\n- 有没有过时的信息（AI领域变化极快，3个月前的说法可能已过时）\n→ 发现任何事实错误 → 🔴 CRITICAL\n\n### 第三波：观众流失测试\n模拟3类观众视角，逐段标记“想划走“的时刻：\n- **小白观众**：完全不懂AI，能否看懂并产生兴趣？\n- **从业者观众**：懂AI，有没有干货而非正确的废话？\n- **划走党**：B站习惯3秒判断，前30秒能否阻止划走？\n→ 任一类观众在任一段“想划走” → 🟠 HIGH\n\n### 第四波：B站竞品对比\n对比B站AI知识区热门视频的脚本特征：\n- 本脚本的Hook是否比竞品更抓人？\n- 信息密度是否达到同类热门视频水平？\n- 有没有竞品已讲烂的角度（观众审美疲劳）？\n→ 结构性劣势 → 🟠 HIGH\n\n### 第五波：边界压力测试\n极端场景：\n- 完全不懂科技的60岁老人能否听懂Hook段？\n- AI研究员能否在60秒内找到新信息？\n- 去掉所有视觉元素，纯文字版还有说服力吗？\n→ 一方完全断裂 → 🟡 MEDIUM\n\n## 📜 历史漏洞知识库\n从 docs/workflow-video-production.md 提取的已知脚本漏洞（必须逐条检查是否复发）：\n| 漏洞ID | 描述 | 历史频次 |\n|--------|------|--------|\n| SCRIPT-01 | HPSV结构不完整（缺少Hook/Pain/Solution任一环节） | 高频 |\n| SCRIPT-02 | 爆点密度不足（<4个或类型单一） | 中频 |\n| SCRIPT-03 | 口语化不够（读起来像文章不像聊天） | 高频 |\n| SCRIPT-04 | 技术内容有事实错误 | 中频 |\n| SCRIPT-05 | 比喻不恰当（类比误导而非帮助理解） | 低频 |\n| SCRIPT-06 | 画面描述不具体（HTML Agent无法据此生成动画） | 高频 |\n\n## 🔄 攻击增强策略（重试时自动升级）\n- 第1次审查：基线攻击 — 五波攻击各执行一次\n- 第2次审查：编码增强 — 换角度重新攻击（从观众心理学而非逻辑角度）\n- 第3次审查：对话增强 — 基于前两轮发现的漏洞类型，深入挖掘同类问题\n- 第4次审查：组合攻击 — 多维度交叉验证（“逻辑漏洞+观众流失“叠加效果）\n- 第5次审查：终极总攻 — 集中火力打击前几轮反复出现的漏洞类型\n\n> ⚠️ 如果是第3次以上审查，必须在报告末尾以 <HISTORY> 标注本轮与前几轮的区别，特别是仍在反复出现的老问题。\n\n## 📊 攻击报告格式\n\n### 🔴 CRITICAL（致命漏洞 — 视频必定失败）\n| # | 漏洞 | 攻击路径 | 防御方案 |\n|---|------|---------|---------|\n\n### 🟠 HIGH（严重缺陷 — 大概率导致观众流失或差评）\n| # | 缺陷 | 攻击路径 | 防御方案 |\n|---|------|---------|---------|\n\n### 🟡 MEDIUM（中等风险 — 累计≥3则FAIL）\n| # | 风险 | 攻击路径 | 防御方案 |\n|---|------|---------|---------|\n\n### 🟢 LOW（轻微瑕疵 — 记录但不影响判定）\n\n### 📋 历史漏洞复发检查\n| 漏洞ID | 状态 | 说明 |\n|--------|------|------|\n| SCRIPT-01 | ✅/❌ | |\n| SCRIPT-02 | ✅/❌ | |\n| SCRIPT-03 | ✅/❌ | |\n| SCRIPT-04 | ✅/❌ | |\n| SCRIPT-05 | ✅/❌ | |\n| SCRIPT-06 | ✅/❌ | |\n\n### 🏆 最终判定\n- 攻击结果：【成功攻破 / 全部抵御】\n- 统计：🔴CRITICAL X | 🟠HIGH Y | 🟡MEDIUM Z | 🟢LOW W\n- 判定：**FAIL** / **PASS**\n  - FAIL = 存在≥1 CRITICAL 或 ≥1 HIGH 或 ≥3 MEDIUM\n  - PASS = 零CRITICAL + 零HIGH + <3 MEDIUM\n\n完成后标注：REDTEAM_SCRIPT_COMPLETE。",
         "builtInType": "explore",
         "agentType": "claudeCode",
         "outputPorts": 1
@@ -156,12 +221,23 @@
       "type": "askUserQuestion",
       "name": "script-review-ask",
       "parentId": "g3-script",
-      "position": { "x": 370, "y": 120 },
+      "position": {
+        "x": 370,
+        "y": 120
+      },
       "data": {
-        "questionText": "脚本审查结果？",
+        "questionText": "🔴 红队攻击报告：脚本",
         "options": [
-          { "label": "通过，继续", "description": "审查通过，进入素材收集", "id": "opt-script-pass" },
-          { "label": "不通过，修改", "description": "存在问题需修改（最多5次重试）", "id": "opt-script-fail" }
+          {
+            "label": "🛡️ 全部抵御，继续",
+            "description": "脚本通过红队攻击测试，零CRITICAL+零HIGH+<3MEDIUM",
+            "id": "opt-script-pass"
+          },
+          {
+            "label": "💥 被攻破，修复",
+            "description": "存在致命漏洞需修复（最多3次重试）",
+            "id": "opt-script-fail"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -173,10 +249,13 @@
       "type": "prompt",
       "name": "script-retry-note",
       "parentId": "g3-script",
-      "position": { "x": 380, "y": 340 },
+      "position": {
+        "x": 380,
+        "y": 340
+      },
       "data": {
-        "label": "脚本重试提醒",
-        "prompt": "脚本审查未通过。正在进入重试循环（最多5次）。\n\n请agent-script先阅读上文审查Agent的详细反馈，逐条针对性修改。不要重新从头写，只修复审查标注的问题。\n\n如果同一个问题反复出现，说明需要结构性调整而非小修。",
+        "label": "脚本红队攻击未通过",
+        "prompt": "🔴 红队攻击未通过（最多3次重试）。\n\n请 agent-script 仔细阅读上文的完整红队攻击报告（以 REDTEAM_SCRIPT_COMPLETE 标注结尾），逐条针对性修复报告中标注的漏洞。不要重新从头写脚本，只修复攻击报告指出的具体问题。\n\n⚠️ 如果同一个漏洞反复出现，说明需要结构性调整而非小修。",
         "variables": {}
       }
     },
@@ -185,12 +264,23 @@
       "type": "askUserQuestion",
       "name": "script-escalate-ask",
       "parentId": "g3-script",
-      "position": { "x": 400, "y": 230 },
+      "position": {
+        "x": 400,
+        "y": 230
+      },
       "data": {
-        "questionText": "脚本已重试多次，是否升级？",
+        "questionText": "脚本已抵御多轮攻击但仍未通过，是否升级？（最多3次重试）",
         "options": [
-          { "label": "继续重试修改", "description": "回到脚本撰写Agent再次修改", "id": "opt-script-retry" },
-          { "label": "升级给用户处理", "description": "暂停自动化，需手动介入处理脚本问题（查看上文审查报告了解具体问题）", "id": "opt-script-esc" }
+          {
+            "label": "继续加强攻击",
+            "description": "回到脚本撰写Agent修复，下一轮攻击将更强",
+            "id": "opt-script-retry"
+          },
+          {
+            "label": "升级给用户处理",
+            "description": "暂停自动化，需手动介入处理脚本问题（查看上文红队攻击报告了解致命漏洞）",
+            "id": "opt-script-esc"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -201,16 +291,27 @@
       "id": "g4-material",
       "type": "group",
       "name": "material-group",
-      "position": { "x": 2130, "y": 100 },
-      "style": { "width": 420, "height": 320 },
-      "data": { "label": "4.素材收集" }
+      "position": {
+        "x": 2130,
+        "y": 100
+      },
+      "style": {
+        "width": 600,
+        "height": 480
+      },
+      "data": {
+        "label": "4.素材收集"
+      }
     },
     {
       "id": "agent-material",
       "type": "subAgent",
       "name": "material-collector",
       "parentId": "g4-material",
-      "position": { "x": 30, "y": 60 },
+      "position": {
+        "x": 30,
+        "y": 60
+      },
       "data": {
         "description": "收集视觉参考+技术资料（合并）",
         "agentDefinition": "素材收集Agent：根据脚本内容同时收集外部视觉参考素材和技术内容资料。",
@@ -224,16 +325,27 @@
       "id": "g5-narr",
       "type": "group",
       "name": "narr-group",
-      "position": { "x": 2580, "y": 100 },
-      "style": { "width": 680, "height": 480 },
-      "data": { "label": "5.旁白规划与审查" }
+      "position": {
+        "x": 2580,
+        "y": 100
+      },
+      "style": {
+        "width": 680,
+        "height": 480
+      },
+      "data": {
+        "label": "5.旁白规划与审查"
+      }
     },
     {
       "id": "agent-narr",
       "type": "subAgent",
       "name": "narration-planner",
       "parentId": "g5-narr",
-      "position": { "x": 30, "y": 40 },
+      "position": {
+        "x": 30,
+        "y": 40
+      },
       "data": {
         "description": "拆分脚本为7-10个画面段落并分配HTML模板",
         "agentDefinition": "旁白规划Agent：将脚本拆分为画面段落，为每段分配最合适的HTML动画模板。",
@@ -248,11 +360,14 @@
       "type": "subAgent",
       "name": "narration-reviewer",
       "parentId": "g5-narr",
-      "position": { "x": 30, "y": 220 },
+      "position": {
+        "x": 30,
+        "y": 220
+      },
       "data": {
-        "description": "审查旁白分段节奏和模板匹配度",
-        "agentDefinition": "独立旁白审查Agent。审查画面分段节奏、模板选择合理性和视觉连贯性。",
-        "prompt": "审查旁白规划方案。\n\n## 审查维度（每项1-5分）\n1. 分段节奏：画面数量+每段时长合理\n2. 模板匹配度：模板选择适合内容\n3. 画面连贯性：转场和风格协调\n4. 覆盖完整性：旁白完整分配到所有画面\n\n## 判定：PASS(≥16/20) 或 FAIL(<16)\n\n## 输出\n- 评分明细\n- PASS/FAIL\n- FAIL时逐项列问题和修改建议\n\n完成后标注：REVIEW_COMPLETE。",
+        "description": "🔴红队攻击：证明旁白规划的节奏/模板/转场存在致命缺陷",
+        "agentDefinition": "🔴红队旁白攻击Agent。你不是审查旁白规划——你是攻击它。证明这个旁白规划会让视频节奏崩塌、观众流失。",
+        "prompt": "你是一名🔴红队攻击专家。你的任务不是“审查“旁白规划——而是**攻击**它。证明这个画面分段和模板分配方案会让视频节奏崩溃，观众坚持不到30秒。\n\n参考上方Production Brief了解模板列表和红队测试标准。\n\n## ⚔️ 攻击原则\n1. **零信任**：默认旁白规划有问题\n2. **连续观看视角**：模拟观众一口气看完10分钟，而非逐段检查\n3. **攻击→防御闭环**：每个漏洞必须有修复方案\n4. **独立裁决**：不受规划Agent影响\n\n## 🎯 五波攻击\n\n### 第一波：注意力断崖攻击\n模拟连续观看，找任何注意力断崖：\n- 单段旁白>90秒（B站观众注意力极限）\n- 连续3段以上无节奏变化（全是快节奏/全是慢节奏）\n- 没有任何“钩子续命“（每段开头没有小悬念或转折）\n- 信息密度分布不均（某段信息爆炸，某段空洞）\n→ 发现任何断崖 → 🟠 HIGH\n\n### 第二波：模板错配攻击\n验证每段的HTML模板选择：\n- 模板视觉风格是否真的匹配该段内容情绪？\n- 是否为“能用就行“而非“最优选择“？\n- 连续两段用同一模板（视觉疲劳）？\n- 模板复杂度是否超过了内容需要的程度（杀鸡用牛刀）？\n→ 错配 → 🟡 MEDIUM，连续错配≥3段 → 🟠 HIGH\n\n### 第三波：情绪断层攻击\n绘制整片情绪曲线，检测断层：\n- 情绪跳跃>2级（如从“震撼“直接跳到“平淡“无过渡）\n- 连续3段以上同一情绪（单调疲劳）\n- 高潮段太短（<40秒，情绪刚起来就结束）\n- 结尾段情绪不对（CTA段应该是激励而非说教）\n→ 情绪断层 → 🟠 HIGH\n\n### 第四波：信息过载攻击\n检查每段的信息量：\n- 单段是否塞了>3个需要理解的新概念？\n- 是否有“喘口气“的段落（让观众消化信息）？\n- 最复杂的信息是否放在了注意力最充沛的第2-3段？\n→ 任一段信息过载 → 🟡 MEDIUM\n\n### 第五波：转场崩溃攻击\n检查段落衔接：\n- 上一段的结尾与下一段的开头是否有关联（而非生硬切换）？\n- 是否有“承上启下“的过渡句？\n- 如果关掉声音只看画面切换，是否突兀？\n→ 任一处衔接断裂 → 🟠 HIGH\n\n## 📜 历史漏洞知识库\n| 漏洞ID | 描述 | 历史频次 |\n|--------|------|--------|\n| NARR-01 | 画面段落时长分配不均（某段太长/太短） | 高频 |\n| NARR-02 | 模板选择与内容情绪不匹配 | 中频 |\n| NARR-03 | 缺少转场过渡，段落间生硬切换 | 中频 |\n| NARR-04 | 旁白文本不适合朗读（书面语而非口语） | 高频 |\n| NARR-05 | 画面要点描述太抽象（HTML Agent无法实现） | 中频 |\n\n## 🔄 攻击增强策略\n- 第1次：基线攻击（五波各一次）\n- 第2次：编码增强（换个视角，如从导演而非观众角度攻击）\n- 第3次：对话增强（深挖前两轮发现的漏洞类型）\n- 第4次：组合攻击（注意力断崖+情绪断层叠加）\n- 第5次：终极总攻（集中打击反复出现的漏洞类型）\n\n## 📊 攻击报告格式\n\n### 🔴 CRITICAL（无 — 旁白规划不涉及技术事实，最高为HIGH）\n\n### 🟠 HIGH（严重缺陷）\n| # | 缺陷 | 攻击路径 | 防御方案 |\n|---|------|---------|---------|\n\n### 🟡 MEDIUM（中等风险 — 累计≥3则FAIL）\n| # | 风险 | 攻击路径 | 防御方案 |\n|---|------|---------|---------|\n\n### 🟢 LOW（轻微瑕疵）\n\n### 📋 历史漏洞复发检查\n| 漏洞ID | 状态 |\n|--------|------|\n| NARR-01 | ✅/❌ |\n| NARR-02 | ✅/❌ |\n| NARR-03 | ✅/❌ |\n| NARR-04 | ✅/❌ |\n| NARR-05 | ✅/❌ |\n\n### 🏆 最终判定\n- 统计：🟠HIGH X | 🟡MEDIUM Y\n- 判定：**FAIL**（≥1 HIGH 或 ≥3 MEDIUM）/ **PASS**\n\n完成后标注：REDTEAM_NARR_COMPLETE。",
         "builtInType": "explore",
         "agentType": "claudeCode",
         "outputPorts": 1
@@ -263,12 +378,23 @@
       "type": "askUserQuestion",
       "name": "narr-review-ask",
       "parentId": "g5-narr",
-      "position": { "x": 360, "y": 120 },
+      "position": {
+        "x": 360,
+        "y": 120
+      },
       "data": {
-        "questionText": "旁白审查结果？",
+        "questionText": "🔴 红队攻击报告：旁白规划",
         "options": [
-          { "label": "通过，继续", "description": "进入视频制作阶段", "id": "opt-narr-pass" },
-          { "label": "不通过", "description": "需调整分段或模板分配", "id": "opt-narr-fail" }
+          {
+            "label": "🛡️ 全部抵御，继续",
+            "description": "旁白规划通过红队攻击，进入并行生产",
+            "id": "opt-narr-pass"
+          },
+          {
+            "label": "💥 被攻破，修复",
+            "description": "存在缺陷需调整（最多3次重试）",
+            "id": "opt-narr-fail"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -280,10 +406,13 @@
       "type": "prompt",
       "name": "narr-retry-note",
       "parentId": "g5-narr",
-      "position": { "x": 380, "y": 330 },
+      "position": {
+        "x": 380,
+        "y": 330
+      },
       "data": {
-        "label": "旁白重试提醒",
-        "prompt": "旁白规划需调整。请agent-narr阅读上文审查反馈，针对性修改分段或模板分配。最多5次重试。",
+        "label": "旁白红队攻击未通过",
+        "prompt": "🔴 红队攻击未通过（最多3次重试）。\n\n请 agent-narr 仔细阅读上文的完整红队攻击报告（以 REDTEAM_NARR_COMPLETE 标注结尾），针对性修改分段、模板分配或转场设计。\n\n⚠️ 如果同一漏洞反复出现，考虑结构性调整。",
         "variables": {}
       }
     },
@@ -292,12 +421,23 @@
       "type": "askUserQuestion",
       "name": "narr-escalate-ask",
       "parentId": "g5-narr",
-      "position": { "x": 400, "y": 220 },
+      "position": {
+        "x": 400,
+        "y": 220
+      },
       "data": {
-        "questionText": "旁白已重试多次，是否升级？",
+        "questionText": "旁白已抵御多轮攻击但仍未通过，是否升级？（最多3次重试）",
         "options": [
-          { "label": "继续重试", "description": "回到旁白规划Agent修改", "id": "opt-narr-retry" },
-          { "label": "升级给用户", "description": "暂停自动化，需手动介入调整旁白规划（查看上文审查报告了解问题）", "id": "opt-narr-esc" }
+          {
+            "label": "继续加强攻击",
+            "description": "回到旁白规划Agent修复，下一轮更强",
+            "id": "opt-narr-retry"
+          },
+          {
+            "label": "升级给用户",
+            "description": "暂停自动化，需手动介入（查看上文红队攻击报告了解缺陷）",
+            "id": "opt-narr-esc"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -308,16 +448,27 @@
       "id": "g6-html",
       "type": "group",
       "name": "html-group",
-      "position": { "x": 3290, "y": 100 },
-      "style": { "width": 680, "height": 480 },
-      "data": { "label": "6a.HTML动画帧（并行）" }
+      "position": {
+        "x": 3290,
+        "y": 100
+      },
+      "style": {
+        "width": 680,
+        "height": 480
+      },
+      "data": {
+        "label": "6a.HTML动画帧（并行）"
+      }
     },
     {
       "id": "agent-html",
       "type": "subAgent",
       "name": "html-generator",
       "parentId": "g6-html",
-      "position": { "x": 30, "y": 40 },
+      "position": {
+        "x": 30,
+        "y": 40
+      },
       "data": {
         "description": "逐帧生成1920×1080 HTML动画",
         "agentDefinition": "HTML动画帧生成Agent：根据旁白规划为每段生成独立HTML动画文件，调用frame-* skill模板。",
@@ -332,11 +483,14 @@
       "type": "subAgent",
       "name": "html-reviewer",
       "parentId": "g6-html",
-      "position": { "x": 30, "y": 220 },
+      "position": {
+        "x": 30,
+        "y": 220
+      },
       "data": {
-        "description": "逐帧审查HTML动画质量",
-        "agentDefinition": "独立HTML帧审查Agent。逐帧检查动画正确性、视觉效果、风格统一性。",
-        "prompt": "逐帧审查HTML动画。必须同时进行代码审查和视觉截图审查。\n\n## 审查方式\n1. **代码审查**：检查CSS规范、字体、动画延迟、颜色对比度\n2. **视觉截图审查**：使用 visual-review 技能（MiMo v2.5视觉模型）截图审查每页\n\n## 审查维度（每帧1-5分）\n1. 动画正确性：流畅、无渲染错误\n2. 画面感染力：视觉吸引\n3. 内容匹配：准确表达旁白\n4. 风格统一：与整体一致（全暗色，无白蓝亮色页面）\n5. 完整性：进场+循环动画齐备\n6. **可见性**：文字清晰可读，字体≥18px，对比度≥4.5:1\n7. **动画同步**：文字动画不比音频先出现\n\n## 视觉截图审查流程\n```bash\nMIMO_API_KEY=$MIMO_API_KEY python ~/.claude/skills/visual-review/review.py --html 'frames/*.html' --output 'screenshots/visual-review-report.md'\n```\n\n## 判定\nPASS：每帧≥4分 且 视觉审查全部PASS\nFAIL：任一帧<4分 或 视觉审查有FAIL\n\n## 输出\n- 逐帧评分表\n- 视觉审查报告\n- PASS/FAIL\n- FAIL时每帧列出问题和修复方案\n\n完成后标注：REVIEW_COMPLETE。",
+        "description": "🔴红队攻击+视觉审查：从攻击者和视觉模型双视角证明HTML帧致命缺陷",
+        "agentDefinition": "🔴红队HTML攻击Agent。代码攻击+视觉模型截图攻击双管齐下。证明这些HTML动画帧会让观众关掉视频。",
+        "prompt": "你是一名🔴红队攻击专家，配备代码审查和MiMo视觉模型双武器。你的任务是**攻击**这些HTML动画帧——证明它们会让观众在3秒内关掉视频。\n\n参考上方Production Brief了解设计规范和红队测试标准。\n\n## ⚔️ 双武器攻击系统\n\n### 武器一：代码层面攻击\n直接检查HTML/CSS源码，攻击方向见下方。\n\n### 武器二：视觉截图攻击（必须执行）\n使用 visual-review 技能（MiMo v2.5视觉模型）对每帧截图进行视觉攻击：\n```bash\nMIMO_API_KEY=$MIMO_API_KEY python ~/.claude/skills/visual-review/review.py --html 'frames/*.html' --output 'screenshots/visual-review-report.md'\n```\n\n## ⚔️ 攻击原则\n1. **像素级零信任**：每一个像素都可能是漏洞\n2. **双武器交叉验证**：代码发现的漏洞用视觉截图确认，视觉发现的漏洞用代码定位\n3. **攻击→防御闭环**：每个漏洞必须有具体修复方案\n4. **暗色铁律**：任何亮色泄漏=立即CRITICAL\n\n## 🎯 六波攻击\n\n### 第一波：暗色一致性攻击（最高优先级）\n- 逐帧检查背景色是否在 #0a0a0f ~ #0d0d14 范围\n- 检查任何白色/浅色元素（边框、阴影、文字底色、滚动条）\n- 检查渐变中是否有亮色段\n- 视觉截图确认：Playwright color_scheme=“dark“下是否出现白屏\n→ 任何亮色泄漏 → 🔴 CRITICAL\n\n### 第二波：可读性攻击\n- 逐个文字元素检查 font-size ≥ 18px（在1920×1080下）\n- 逐个文字元素检查与背景的对比度 ≥ 4.5:1（用WCAG公式计算，不靠肉眼）\n- 模拟缩小到手机屏幕（~375px宽），文字是否仍可读？\n- 视觉截图确认：低亮度屏幕下文字是否可见？\n→ 任一处不达标 → 🔴 CRITICAL\n\n### 第三波：视觉轰炸攻击\n- 检查频闪效果（任何<0.5s周期的高对比闪烁）\n- 连续3帧是否都有大面积高饱和动画？\n- 检查视觉疲劳元素：大面积纯红/纯蓝背景 + 快速移动元素\n- 饱和度过高（>90% saturation）的元素占比？\n→ 频闪 → 🟠 HIGH，视觉疲劳 → 🟡 MEDIUM\n\n### 第四波：品牌伤害攻击\n- 字体是否在 [Geist, Noto Sans SC] 范围内？（绝对禁止Inter）\n- 对齐是否像素级精确？（元素偏移>2px = 不专业）\n- 是否有模糊/像素化/压缩伪影？\n- 字体混用（同一帧出现两种以上字体）？\n- 视觉截图确认：是否有任何“这不像专业视频“的观感？\n→ 发现Inter → 🔴 CRITICAL，≥3处品牌问题 → 🟠 HIGH\n\n### 第五波：注意力劫持攻击\n- 动画是否比旁白更抢眼？（背景动画如果过于复杂会抢走旁白注意力）\n- 入场动画时长是否合理（0.5-2s，不能拖太久）？\n- 是否有“动画循环“在旁白结束后仍在运行（干扰下一段）？\n- 视觉截图确认：在典型观看距离下，视线是否先被动画而非内容吸引？\n→ 严重劫持 → 🟠 HIGH\n\n### 第六波：动画崩溃攻击\n- 长时间运行（>120s）是否出现内存泄漏或帧率下降？\n- 所有CSS动画是否使用 compositor-friendly 属性（transform/opacity）？\n- 检查 animation-delay 是否合理（文字不能比旁白先出现）\n- 是否有未完成的动画（keyframes定义但未使用、动画卡在一半）？\n→ 崩溃/渲染错误 → 🟠 HIGH\n\n## 📜 历史漏洞知识库\n| 漏洞ID | 描述 | 历史频次 |\n|--------|------|--------|\n| HTML-01 | 白色/浅色页面（暗色铁律违反） | 极高频 |\n| HTML-02 | 文字与背景同色/对比度不足 | 高频 |\n| HTML-03 | Inter字体导致Playwright录制抖动 | 极高频 |\n| HTML-04 | 字体<18px导致不可读 | 高频 |\n| HTML-05 | 文字动画先于旁白出现（延迟不足） | 高频 |\n| HTML-06 | 内容重叠/遮挡 | 中频 |\n| HTML-07 | 白屏闪光（未设color_scheme=“dark“） | 高频 |\n| HTML-08 | 动画卡顿/帧率低（非GPU加速属性） | 中频 |\n\n## 🔄 攻击增强策略\n- 第1次：基线攻击（代码+视觉双武器各一次）\n- 第2次：编码增强（换检测工具/标准，如用axe-core测a11y而非手动检查）\n- 第3次：对话增强（聚焦前两轮发现的漏洞类型，查同类的其他帧）\n- 第4次：组合攻击（暗色一致性+可读性+品牌伤害三合一，找“叠加致死“的组合漏洞）\n- 第5次：终极总攻（针对历史高频漏洞逐帧地毯式排查）\n\n## 📊 攻击报告格式\n\n### 🔴 CRITICAL（致命漏洞）\n| # | 帧号 | 漏洞 | 攻击路径 | 防御方案 |\n|---|------|------|---------|---------|\n\n### 🟠 HIGH（严重缺陷）\n| # | 帧号 | 缺陷 | 攻击路径 | 防御方案 |\n|---|------|------|---------|---------|\n\n### 🟡 MEDIUM（中等风险 — 累计≥3则FAIL）\n\n### 🟢 LOW（轻微瑕疵）\n\n### 📋 历史漏洞复发检查\n| 漏洞ID | 状态 |\n|--------|------|\n| HTML-01~08 | 逐条标注 ✅/❌ |\n\n### 🖼️ 视觉审查报告\n（附 visual-review 技能输出报告摘要）\n\n### 🏆 最终判定\n- 统计：🔴CRITICAL X | 🟠HIGH Y | 🟡MEDIUM Z\n- 判定：**FAIL**（≥1 CRITICAL 或 ≥1 HIGH 或 ≥3 MEDIUM）/ **PASS**\n\n完成后标注：REDTEAM_HTML_COMPLETE。",
         "builtInType": "explore",
         "agentType": "claudeCode",
         "outputPorts": 1
@@ -347,12 +501,23 @@
       "type": "askUserQuestion",
       "name": "html-review-ask",
       "parentId": "g6-html",
-      "position": { "x": 360, "y": 120 },
+      "position": {
+        "x": 360,
+        "y": 120
+      },
       "data": {
-        "questionText": "HTML帧审查结果？",
+        "questionText": "🔴 红队攻击报告：HTML动画帧",
         "options": [
-          { "label": "通过", "description": "所有帧合格，汇入视频合成", "id": "opt-html-pass" },
-          { "label": "不通过", "description": "存在不合格帧需修改", "id": "opt-html-fail" }
+          {
+            "label": "🛡️ 全部抵御，汇入合成",
+            "description": "所有帧通过红队攻击+视觉审查",
+            "id": "opt-html-pass"
+          },
+          {
+            "label": "💥 被攻破，修复",
+            "description": "存在致命漏洞需修复（最多3次重试）",
+            "id": "opt-html-fail"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -364,10 +529,13 @@
       "type": "prompt",
       "name": "html-retry-note",
       "parentId": "g6-html",
-      "position": { "x": 380, "y": 330 },
+      "position": {
+        "x": 380,
+        "y": 330
+      },
       "data": {
-        "label": "HTML重试提醒",
-        "prompt": "HTML帧审查未通过。请agent-html阅读上文审查反馈，只修复标注的问题帧。同一帧反复出问题可考虑更换模板类型。最多5次重试。",
+        "label": "HTML红队攻击未通过",
+        "prompt": "🔴 红队攻击未通过（最多3次重试）。\n\n请 agent-html 仔细阅读上文的完整红队攻击报告和视觉审查报告（以 REDTEAM_HTML_COMPLETE 标注结尾），只修复标注的问题帧。同一帧反复出问题考虑更换模板类型。\n\n⚠️ 暗色一致性和对比度是零容忍项——发现即 CRITICAL。",
         "variables": {}
       }
     },
@@ -376,12 +544,23 @@
       "type": "askUserQuestion",
       "name": "html-escalate-ask",
       "parentId": "g6-html",
-      "position": { "x": 400, "y": 220 },
+      "position": {
+        "x": 400,
+        "y": 220
+      },
       "data": {
-        "questionText": "HTML帧已重试多次，是否升级？",
+        "questionText": "HTML帧已抵御多轮攻击但仍未通过，是否升级？（最多3次重试）",
         "options": [
-          { "label": "继续重试", "description": "回到HTML生成Agent修改", "id": "opt-html-retry" },
-          { "label": "升级给用户", "description": "暂停自动化，需手动介入修复HTML帧问题（查看上文审查报告了解具体缺陷）", "id": "opt-html-esc" }
+          {
+            "label": "继续加强攻击",
+            "description": "回到HTML生成Agent修复，下一轮更强",
+            "id": "opt-html-retry"
+          },
+          {
+            "label": "升级给用户",
+            "description": "暂停自动化，需手动介入（查看上文红队+视觉审查报告）",
+            "id": "opt-html-esc"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -392,19 +571,30 @@
       "id": "g7-tts",
       "type": "group",
       "name": "tts-group",
-      "position": { "x": 3290, "y": 610 },
-      "style": { "width": 680, "height": 480 },
-      "data": { "label": "6b.TTS语音合成（并行）" }
+      "position": {
+        "x": 3290,
+        "y": 610
+      },
+      "style": {
+        "width": 680,
+        "height": 480
+      },
+      "data": {
+        "label": "6b.TTS语音合成（并行）"
+      }
     },
     {
       "id": "agent-tts",
       "type": "subAgent",
       "name": "tts-synthesizer",
       "parentId": "g7-tts",
-      "position": { "x": 30, "y": 40 },
+      "position": {
+        "x": 30,
+        "y": 40
+      },
       "data": {
-        "description": "使用MiMo TTS声纹克隆合成旁白",
-        "agentDefinition": "TTS合成Agent：使用MiMo TTS API声纹克隆为每段旁白合成语音。参考 scripts/01-什么是大语言模型/synthesize.py 实现。",
+        "description": "使用MiMo TTS音色设计(voicedesign)合成旁白",
+        "agentDefinition": "TTS合成Agent：使用MiMo TTS音色设计(voicedesign)模型为每段旁白合成语音。参考 scripts/01-什么是大语言模型/synthesize.py 实现。",
         "prompt": "使用MiMo TTS音色设计为每段旁白合成语音。\n\n## 技术要求\n1. **必须使用 mimo-v2.5-tts-voicedesign 模型**，不要用 voiceclone 或预置音色\n2. 音色描述参考 scripts/[视频名]/voice-prompt.md，核心要求：有个性、有口音、语速快、像朋友聊天\n3. 参考实现：scripts/[视频名]/synthesize.py\n4. 每段独立WAV，输出到 scripts/[视频名]/audio/NN.wav\n5. **每段音频结尾必须添加1.5秒静音**，用于转场间隔，避免两段音频紧贴\n6. API Key 通过环境变量 MIMO_API_KEY 读取，**禁止明文写在代码或命令行中**\n7. tp- 开头的 key 使用 token-plan-cn.xiaomimimo.com endpoint\n\n## 已知问题（必须避免）\n- 音色太无聊 → 必须有个性（口音、语速、情绪）\n- 音频紧贴 → 必须加1.5s静音间隔\n- API Key暴露 → 必须用环境变量\n\n## 输出\n- 每段合成后标注 TTS_NN_COMPLETE\n- 全部完成标注 ALL_TTS_COMPLETE\n- 音频时长汇总\n\n重试时只重新合成审查标注的问题段落。",
         "builtInType": "general-purpose",
         "agentType": "claudeCode",
@@ -416,11 +606,14 @@
       "type": "subAgent",
       "name": "tts-reviewer",
       "parentId": "g7-tts",
-      "position": { "x": 30, "y": 220 },
+      "position": {
+        "x": 30,
+        "y": 220
+      },
       "data": {
-        "description": "审查合成音频自然度和质量",
-        "agentDefinition": "独立TTS审查Agent。审查合成音频的自然度、清晰度、声纹一致性和节奏。",
-        "prompt": "逐段审查TTS合成音频。\n\n## 审查维度（每段1-5分）\n1. 音频清晰度（无杂音破音）\n2. 语速自然度（不能太慢，B站观众没耐心）\n3. **情感匹配度**（不能像念稿，要有个性、有感染力）\n4. 停顿节奏（段落间是否有1-1.5s静音间隔）\n5. **口音/个性**（是否有辨识度，不能是标准普通话机器人腔）\n\n## 已知问题（必须检查）\n- 音色太无聊 → 检查是否有个性（口音、语速、情绪）\n- 音频紧贴 → 检查每段结尾是否有1-1.5s静音\n- 语速太慢 → 检查是否偏快\n\n## 判定\nPASS：每段≥4分\nFAIL：任一段<4分（标注问题段落）\n\n## 输出\n- 逐段评分\n- PASS/FAIL\n- FAIL时列问题段落和建议\n\n完成后标注：REVIEW_COMPLETE。",
+        "description": "🔴红队攻击：证明TTS音频会让观众关掉声音或划走",
+        "agentDefinition": "🔴红队TTS攻击Agent。你不是审查音频质量——你是攻击它。证明这些TTS音频会让观众在B站“三秒划走“——要么关声音，要么关视频。",
+        "prompt": "你是一名🔴红队攻击专家。你的任务不是“审查“TTS音频——而是**攻击**它。B站观众对声音极度敏感——无聊的音色、刺耳的频段、念稿的节奏，任何一个都会让观众直接划走。证明这些音频会杀死这个视频。\n\n参考上方Production Brief了解音色设计规范和红队测试标准。\n\n## ⚔️ 攻击原则\n1. **连续收听的折磨测试**：把7-10段音频连起来一口气听完，如果你的耳朵在任何时刻感到不适——那就是漏洞\n2. **B站观众视角**：B站观众没有耐心，声音前3秒就能决定去留\n3. **攻击→防御闭环**：每个音频漏洞必须有具体的重新合成方案\n4. **独立裁决**：不受TTS Agent影响\n\n## 🎯 六波攻击\n\n### 第一波：听觉疲劳攻击\n连续收听全部音频段落：\n- 音色中是否有刺耳频段（2-5kHz过亮、齿音过重）？\n- 连续7-10段同一音色是否造成听觉疲劳？\n- 音量是否均衡（段落间音量差异>3dB就是漏洞）？\n- 有没有爆音（clipping）/ 削波？\n→ 刺耳/爆音 → 🔴 CRITICAL，听觉疲劳 → 🟠 HIGH\n\n### 第二波：注意力流失攻击\n逐段检查“走神风险“：\n- 语速是否太慢（<4字/秒，B站观众会不耐烦）？\n- 是否有明显的“念稿感“（无抑扬顿挫、无情绪起伏）？\n- 句间停顿是否过长（>1s的沉默让观众以为卡了）？\n- 连续3段以上语调无变化（单调疲劳）？\n→ “念稿感” → 🟠 HIGH，1处走神风险 → 🟡 MEDIUM\n\n### 第三波：底噪攻击\n逐段检查音频质量：\n- 是否有可闻底噪（嘶声/电流声）？\n- 采样率是否达标（≥24kHz）？\n- 有无破音、爆音、杂音？\n- 静音段是否真的静音（而非噪音频段）？\n→ 底噪/爆音 → 🔴 CRITICAL\n\n### 第四波：情感错配攻击\n验证每段语气与内容情绪的匹配：\n- 开心内容是否用平淡语气？\n- 严肃内容是否用轻浮语气？\n- CTA段是否让人有行动的冲动（而非听完就忘）？\n- 整片情感曲线是否与旁白规划的情绪表一致？\n→ 明显错配 → 🟠 HIGH\n\n### 第五波：口音漂移攻击\n检查全部段落的音色/口音一致性：\n- 口音是否在所有段落保持一致（不会忽然变成标准普通话）？\n- 音色是否有辨识度（不能是通用TTS机器腔）？\n- 个性特征是否贯穿始终（如山东口音、语速偏快、情绪饱满）？\n→ 口音漂移≥2处 → 🟠 HIGH\n\n### 第六波：静音间隔攻击\n检查每段结尾静音：\n- 是否真的≥1.5秒（用音频工具测量，不靠感觉）？\n- 静音是否干净（无残留音频）？\n- 间隔太短转场仓促，太长观众以为卡了——是否在1.0-2.0s最佳区间？\n→ 任一段静音<1.0s或>2.5s → 🟡 MEDIUM，累计≥3段 → 🟠 HIGH\n\n## 📜 历史漏洞知识库\n| 漏洞ID | 描述 | 历史频次 |\n|--------|------|--------|\n| TTS-01 | 音色太无聊/机器人腔（无个性无口音） | 极高频 |\n| TTS-02 | 音频紧贴无间隔（忘记加1.5s静音） | 高频 |\n| TTS-03 | 语速太慢（B站观众无耐心） | 高频 |\n| TTS-04 | 情感平淡如念稿 | 高频 |\n| TTS-05 | API Key硬编码泄露 | 中频 |\n| TTS-06 | 用错模型（voiceclone而非voicedesign） | 中频 |\n| TTS-07 | 口音不一致（段落间音色漂移） | 低频 |\n\n## 🔄 攻击增强策略\n- 第1次：基线攻击（六波各一次，全部听完）\n- 第2次：编码增强（换听音设备——模拟手机外放而非耳机）\n- 第3次：对话增强（聚焦前两轮发现的问题段落，深挖同类）\n- 第4次：组合攻击（听觉疲劳+情感错配叠加——找“难听且不对味“的组合）\n- 第5次：终极总攻（逐段波形分析+频谱检查，技术级攻击）\n\n## 📊 攻击报告格式\n\n### 🔴 CRITICAL（致命漏洞）\n| # | 段落 | 漏洞 | 攻击路径 | 防御方案 |\n|---|------|------|---------|---------|\n\n### 🟠 HIGH（严重缺陷）\n| # | 段落 | 缺陷 | 攻击路径 | 防御方案 |\n|---|------|------|---------|---------|\n\n### 🟡 MEDIUM（中等风险 — 累计≥3则FAIL）\n\n### 🟢 LOW（轻微瑕疵）\n\n### 📋 历史漏洞复发检查\n| 漏洞ID | 状态 |\n|--------|------|\n| TTS-01~07 | 逐条标注 ✅/❌ |\n\n### 🏆 最终判定\n- 统计：🔴CRITICAL X | 🟠HIGH Y | 🟡MEDIUM Z\n- 判定：**FAIL**（≥1 CRITICAL 或 ≥1 HIGH 或 ≥3 MEDIUM）/ **PASS**\n\n完成后标注：REDTEAM_TTS_COMPLETE。",
         "builtInType": "explore",
         "agentType": "claudeCode",
         "outputPorts": 1
@@ -431,12 +624,23 @@
       "type": "askUserQuestion",
       "name": "tts-review-ask",
       "parentId": "g7-tts",
-      "position": { "x": 360, "y": 120 },
+      "position": {
+        "x": 360,
+        "y": 120
+      },
       "data": {
-        "questionText": "TTS审查结果？",
+        "questionText": "🔴 红队攻击报告：TTS音频",
         "options": [
-          { "label": "通过", "description": "所有音频合格，汇入视频合成", "id": "opt-tts-pass" },
-          { "label": "不通过", "description": "存在不合格音频需重新合成", "id": "opt-tts-fail" }
+          {
+            "label": "🛡️ 全部抵御，汇入合成",
+            "description": "所有音频通过红队攻击测试",
+            "id": "opt-tts-pass"
+          },
+          {
+            "label": "💥 被攻破，重新合成",
+            "description": "存在音频漏洞需重新合成（最多3次重试）",
+            "id": "opt-tts-fail"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -448,10 +652,13 @@
       "type": "prompt",
       "name": "tts-retry-note",
       "parentId": "g7-tts",
-      "position": { "x": 380, "y": 330 },
+      "position": {
+        "x": 380,
+        "y": 330
+      },
       "data": {
-        "label": "TTS重试提醒",
-        "prompt": "TTS审查未通过。请agent-tts阅读上文审查反馈，只重新合成问题段落。同一段反复失败检查文本是否适合TTS朗读。最多5次重试。",
+        "label": "TTS红队攻击未通过",
+        "prompt": "🔴 红队攻击未通过（最多3次重试）。\n\n请 agent-tts 仔细阅读上文的完整红队攻击报告（以 REDTEAM_TTS_COMPLETE 标注结尾），只重新合成问题段落。注意防御方案中的具体修复建议。同一段反复失败检查旁白文本是否适合 TTS 朗读（可能需要调整文本）。",
         "variables": {}
       }
     },
@@ -460,12 +667,23 @@
       "type": "askUserQuestion",
       "name": "tts-escalate-ask",
       "parentId": "g7-tts",
-      "position": { "x": 400, "y": 220 },
+      "position": {
+        "x": 400,
+        "y": 220
+      },
       "data": {
-        "questionText": "TTS已重试多次，是否升级？",
+        "questionText": "TTS已抵御多轮攻击但仍未通过，是否升级？（最多3次重试）",
         "options": [
-          { "label": "继续重试", "description": "回到TTS合成Agent重试", "id": "opt-tts-retry" },
-          { "label": "升级给用户", "description": "暂停自动化，需手动介入处理TTS问题（查看上文审查报告了解问题段落）", "id": "opt-tts-esc" }
+          {
+            "label": "继续加强攻击",
+            "description": "回到TTS合成Agent修复，下一轮更强",
+            "id": "opt-tts-retry"
+          },
+          {
+            "label": "升级给用户",
+            "description": "暂停自动化，需手动介入（查看上文红队攻击报告）",
+            "id": "opt-tts-esc"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -476,16 +694,27 @@
       "id": "g8-assembly",
       "type": "group",
       "name": "assembly-group",
-      "position": { "x": 4000, "y": 100 },
-      "style": { "width": 720, "height": 480 },
-      "data": { "label": "7.视频合成与审查" }
+      "position": {
+        "x": 4000,
+        "y": 100
+      },
+      "style": {
+        "width": 720,
+        "height": 480
+      },
+      "data": {
+        "label": "7.视频合成与审查"
+      }
     },
     {
       "id": "agent-assemble",
       "type": "subAgent",
       "name": "video-assembler",
       "parentId": "g8-assembly",
-      "position": { "x": 30, "y": 40 },
+      "position": {
+        "x": 30,
+        "y": 40
+      },
       "data": {
         "description": "渲染HTML帧为视频+合成TTS音频+字幕",
         "agentDefinition": "视频合成Agent：将HTML帧渲染为视频片段，与TTS音频合成，添加字幕和转场，输出最终MP4。",
@@ -500,11 +729,14 @@
       "type": "subAgent",
       "name": "assembly-reviewer",
       "parentId": "g8-assembly",
-      "position": { "x": 30, "y": 220 },
+      "position": {
+        "x": 30,
+        "y": 220
+      },
       "data": {
-        "description": "审查成品视频质量，发布前最后一道关",
-        "agentDefinition": "独立成品审查Agent。最严格标准审查最终视频，这是发布前最后一道关。",
-        "prompt": "以最严格标准审查成品视频。这是发布前最后一道关。\n\n## 审查维度（每项1-5分）\n1. 音画同步（旁白与画面精确匹配）\n2. 节奏流畅（观看体验、无冷场）\n3. 内容准确（技术信息无错误）\n4. 画质清晰（1920×1080渲染质量）\n5. 字幕准确（无错别字、时间轴正确）\n6. 转场自然（画面过渡流畅）\n7. 音频质量（音量均衡、无突兀）\n8. 首帧吸引力（前5秒是否抓眼球）\n\n## 判定\nPASS：≥32/40 且 无单项<3\nFAIL：<32 或 任一单项<3\n\n## 输出\n- 总评分和8项明细\n- PASS/FAIL\n- FAIL时标注问题时间点和具体描述\n\n完成后标注：REVIEW_COMPLETE。",
+        "description": "🔴红队攻击：发布前最后防线——证明最终视频存在致命缺陷",
+        "agentDefinition": "🔴红队成品攻击Agent。发布前最后一道防线。你是最挑剔的攻击者——如果这个视频能通过你的攻击，它就能承受B站观众的审判。放水就是对视频的背叛。",
+        "prompt": "你是一名🔴红队攻击专家，驻守在发布前最后一道防线。你的任务是**攻击**这个最终成品视频——用最挑剔、最残酷的标准。如果你找不到致命漏洞，这个视频就真的准备好了。如果你找到了，恭喜你——你挽救了一次发布事故。\n\n参考上方Production Brief了解技术规范和红队测试标准。\n\n## ⚔️ 攻击原则\n1. **逐帧审查**：不是“看一遍“，而是逐帧检查每一个像素和每一个音频采样\n2. **B站首发模拟**：模拟视频发布后第一个观众的真实体验\n3. **零容忍**：对CRITICAL和HIGH漏洞零容忍——一个都不行\n4. **攻击→防御闭环**：每个漏洞必须有精确到秒的修复方案\n\n## 🎯 九波攻击\n\n### 第零波：跨阶段一致性攻击（审查前必做）\n先做全局交叉验证，再逐帧审查：\n- **数量一致性**：HTML帧数 == TTS音频段数 == 字幕行数 == 旁白规划的画面段落数？\n- **内容一致性**：脚本中承诺的核心概念在HTML帧中是否都有对应画面？\n- **标题兑现检查**：发布标题中的关键词/承诺，是否在视频内容中兑现？\n- **情绪曲线对齐**：旁白规划的情绪表 -> HTML帧的视觉情绪 -> TTS的语调情绪，三者是否一致？\n- **时长偏差**：实际TTS音频总时长 vs 旁白规划预估总时长，偏差是否>10%？\n-> 任一项不匹配 -> 🟠 HIGH\n\n### 🎯 基线八波攻击\n\n### 第一波：首帧流失攻击\n模拟B站信息流刷到视频的前5秒：\n- 0:00-0:05 的画面是否足够抓眼球（阻止划走）？\n- 前5秒的声音是否清晰有力？\n- 如果观众只看前5秒就决定——这个视频能留下他吗？\n- 有没有出现白屏闪光或其他启动异常？\n→ 不能阻止划走 → 🔴 CRITICAL\n\n### 第二波：音画同步攻击\n逐段检查音画同步：\n- 画面切换时间点是否精确对准音频段落起点？\n- 文字动画是否与旁白同步（文字不比声音先出现/延迟出现）？\n- 任何偏移>100ms的时刻都要标记\n- 重点检查段落衔接处（最易出现偏移）\n→ 任一偏移>100ms → 🔴 CRITICAL\n\n### 第三波：画质退化攻击\n逐帧检查视频渲染质量：\n- 是否有模糊帧（运动模糊/编码模糊）？\n- 是否有压缩伪影（blocking/banding）？\n- 色彩是否准确（对比源HTML的渲染效果）？\n- 分辨率是否始终1920×1080（无缩放/裁剪）？\n- 帧率是否稳定30fps（无掉帧/卡顿）？\n→ 画质退化 → 🟠 HIGH\n\n### 第四波：字幕逐字攻击\n逐字核对字幕准确性：\n- 字幕文本是否与旁白一字不差？\n- 时间轴是否精确对齐（无>200ms偏移）？\n- 标点符号是否正确？\n- 字幕位置是否遮挡关键画面内容？\n- 字体大小是否在视频中可读？\n→ 任何导致理解错误 → 🟡 MEDIUM\n\n### 第五波：音量跳变攻击\n检查全片音量曲线：\n- 段落间音量是否均衡（差异>3dB就是漏洞）？\n- 有无突然变大声/变小声的段落？\n- 峰值音量是否失真？\n- 整体响度是否符合B站标准（约-14 LUFS）？\n→ 音量跳变>6dB → 🟠 HIGH\n\n### 第六波：任意入口攻击\n模拟从视频的任意时间点进入：\n- 从25%处进入，能否看懂当前内容？\n- 从50%处进入，是否有上下文断裂感？\n- 从75%处进入，能否独立理解并产生兴趣？\n→ 任一处完全断裂 → 🟡 MEDIUM\n\n### 第七波：转场质量攻击\n检查画面切换位置：\n- 转场是否流畅（无黑屏/闪烁/跳帧）？\n- 转场时长是否合理（0.5-1.5s）？\n- 转场效果是否与内容情绪匹配（严肃内容用花哨转场=灾难）？\n→ 转场异常 → 🟠 HIGH\n\n### 第八波：全局一致性攻击\n完整观看整个视频（不停顿），检查：\n- 整体节奏是否有“疲惫期“（中间某段让人想放弃）？\n- 开头Hook和结尾CTA是否遥相呼应？\n- 视频给人留下的“一句话印象“是否与选题意图一致？\n- 有没有任何让你觉得“这个可以删掉“的段落？\n→ 节奏崩塌 → 🟠 HIGH\n\n## 📜 历史漏洞知识库\n| 漏洞ID | 描述 | 历史频次 |\n|--------|------|--------|\n| ASM-01 | 音画不同步（偏移>100ms） | 高频 |\n| ASM-02 | 白屏闪光（未设color_scheme=“dark“） | 极高频 |\n| ASM-03 | 中文路径导致ffmpeg失败 | 高频 |\n| ASM-04 | 系统ffmpeg空二进制/不可用 | 中频 |\n| ASM-05 | 动画在录制前未冻结（字体加载时出现闪烁） | 中频 |\n| ASM-06 | 音量不均衡（段落间差异大） | 中频 |\n| ASM-07 | 字幕错别字/时间轴偏移 | 中频 |\n| ASM-08 | 画质压缩过度（码率不足） | 低频 |\n\n## 🔄 攻击增强策略\n- 第1次：基线攻击（八波各一次，正常速度观看）\n- 第2次：编码增强（0.5倍速逐帧看+2倍速找节奏问题）\n- 第3次：对话增强（聚焦前两轮的漏洞时间点，±5秒范围深入排查）\n- 第4次：组合攻击（音画同步+字幕+音量三合一，找“连锁崩溃“的组合漏洞）\n- 第5次：终极总攻（用专业视频分析工具级审查——逐帧导出、波形分析、VMAF评分）\n\n## 📊 攻击报告格式\n\n### 🔴 CRITICAL（致命漏洞 — 发布即事故）\n| # | 时间点 | 漏洞 | 攻击路径 | 防御方案 |\n|---|--------|------|---------|---------|\n\n### 🟠 HIGH（严重缺陷）\n| # | 时间点 | 缺陷 | 攻击路径 | 防御方案 |\n|---|--------|------|---------|---------|\n\n### 🟡 MEDIUM（中等风险 — 累计≥3则FAIL）\n\n### 🟢 LOW（轻微瑕疵）\n\n### 📋 历史漏洞复发检查\n| 漏洞ID | 状态 |\n|--------|------|\n| ASM-01~08 | 逐条标注 ✅/❌ |\n\n### 🏆 最终判定\n- 统计：🔴CRITICAL X | 🟠HIGH Y | 🟡MEDIUM Z\n- 判定：**FAIL** / **PASS**\n\n完成后标注：REDTEAM_ASSEMBLY_COMPLETE。",
         "builtInType": "explore",
         "agentType": "claudeCode",
         "outputPorts": 1
@@ -515,12 +747,23 @@
       "type": "askUserQuestion",
       "name": "assembly-review-ask",
       "parentId": "g8-assembly",
-      "position": { "x": 380, "y": 120 },
+      "position": {
+        "x": 380,
+        "y": 120
+      },
       "data": {
-        "questionText": "成品审查结果？",
+        "questionText": "🔴 红队攻击报告：成品视频",
         "options": [
-          { "label": "通过", "description": "视频质量合格，准备发布", "id": "opt-asm-pass" },
-          { "label": "不通过", "description": "存在问题需调整后再审", "id": "opt-asm-fail" }
+          {
+            "label": "🛡️ 全部抵御，准备发布",
+            "description": "视频通过最后一道红队防线",
+            "id": "opt-asm-pass"
+          },
+          {
+            "label": "💥 被攻破，修复",
+            "description": "存在致命漏洞需修复（最多3次重试）",
+            "id": "opt-asm-fail"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -532,10 +775,13 @@
       "type": "prompt",
       "name": "assembly-retry-note",
       "parentId": "g8-assembly",
-      "position": { "x": 380, "y": 330 },
+      "position": {
+        "x": 380,
+        "y": 330
+      },
       "data": {
-        "label": "合成重试提醒",
-        "prompt": "成品审查未通过。请agent-assemble阅读上文审查反馈，优先修复音画同步和画质问题。最多5次重试。",
+        "label": "成品红队攻击未通过",
+        "prompt": "🔴 红队攻击未通过（最多3次重试）。\n\n请 agent-assemble 仔细阅读上文的完整红队攻击报告（以 REDTEAM_ASSEMBLY_COMPLETE 标注结尾），优先修复 CRITICAL 和 HIGH 级别的漏洞。注意每个漏洞附带的防御方案（精确到秒的修复建议）。\n\n⚠️ 下一轮攻击将升级（慢速逐帧+波形分析）。",
         "variables": {}
       }
     },
@@ -544,12 +790,23 @@
       "type": "askUserQuestion",
       "name": "assembly-escalate-ask",
       "parentId": "g8-assembly",
-      "position": { "x": 400, "y": 220 },
+      "position": {
+        "x": 400,
+        "y": 220
+      },
       "data": {
-        "questionText": "合成已重试多次，是否升级？",
+        "questionText": "成品已抵御多轮攻击但仍未通过，是否升级？（最多3次重试）",
         "options": [
-          { "label": "继续重试", "description": "回到合成Agent调整", "id": "opt-asm-retry" },
-          { "label": "升级给用户", "description": "暂停自动化，需手动介入处理视频合成问题（查看上文审查报告了解具体缺陷）", "id": "opt-asm-esc" }
+          {
+            "label": "继续加强攻击",
+            "description": "回到合成Agent修复，下一轮更强",
+            "id": "opt-asm-retry"
+          },
+          {
+            "label": "升级给用户",
+            "description": "暂停自动化，需手动介入（查看上文红队攻击报告）",
+            "id": "opt-asm-esc"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -560,16 +817,27 @@
       "id": "g9-publish",
       "type": "group",
       "name": "publish-group",
-      "position": { "x": 4750, "y": 100 },
-      "style": { "width": 720, "height": 480 },
-      "data": { "label": "8.发布优化" }
+      "position": {
+        "x": 4750,
+        "y": 100
+      },
+      "style": {
+        "width": 720,
+        "height": 480
+      },
+      "data": {
+        "label": "8.发布优化"
+      }
     },
     {
       "id": "agent-publish",
       "type": "subAgent",
       "name": "publish-generator",
       "parentId": "g9-publish",
-      "position": { "x": 30, "y": 40 },
+      "position": {
+        "x": 30,
+        "y": 40
+      },
       "data": {
         "description": "生成B站发布全素材（标题/标签/分区/简介/封面文案）",
         "agentDefinition": "发布素材生成Agent：为B站视频生成优化的标题、标签、分区、封面文案、简介和发布设置。",
@@ -584,11 +852,14 @@
       "type": "subAgent",
       "name": "publish-reviewer",
       "parentId": "g9-publish",
-      "position": { "x": 30, "y": 220 },
+      "position": {
+        "x": 30,
+        "y": 220
+      },
       "data": {
-        "description": "审查发布素材的点击率和SEO优化",
-        "agentDefinition": "独立发布审查Agent。审查标题点击率、标签覆盖度和SEO优化程度。",
-        "prompt": "审查发布素材优化质量。\n\n## 审查维度（每项1-5分）\n1. 标题吸引力（点击率预估、关键词）\n2. 分区正确性（适合目标受众）\n3. 标签覆盖度（核心+流量+长尾）\n4. 封面文案（匹配画面、吸引力）\n5. 简介质量（前100字是否引人展开）\n\n## 判定\nPASS：≥20/25\nFAIL：<20\n\n## 输出\n- 评分明细\n- PASS/FAIL\n- FAIL时逐项改进建议\n\n完成后标注：REVIEW_COMPLETE。",
+        "description": "🔴红队攻击：证明发布素材会导致低点击率/高流失率/合规风险",
+        "agentDefinition": "🔴红队发布攻击Agent。你不是审查发布素材——你是攻击它。证明这些标题/标签/封面/简介会让视频在B站的信息流中被无视、被跳过、甚至被举报。",
+        "prompt": "你是一名🔴红队攻击专家。你的任务不是“审查“发布素材——而是**攻击**它。在B站，发布素材决定了视频的生死——标题决定点击，封面决定停留，标签决定推荐。证明这些素材会让你的视频沉没在信息流中。\n\n参考上方Production Brief了解账号定位和红队测试标准。\n\n## ⚔️ 攻击原则\n1. **B站信息流模拟**：把自己当成刷B站的普通用户，这个视频会不会被划走？\n2. **竞品视角**：同类视频的标题/封面比你的好在哪？\n3. **攻击→防御闭环**：每个漏洞必须有具体的文案修改方案\n4. **审核视角**：额外的B站审核风险扫描\n\n## 🎯 五波攻击\n\n### 第一波：标题党反噬攻击\n- 标题中的承诺（“彻底搞懂”“一篇文章让你...“）是否在视频中兑现？\n- 如果没有兑现，观众会不会在评论区骂“标题党“？\n- 标题的情绪强度是否与视频实际内容匹配（标题热闹内容平淡=反噬）？\n- 标题中是否有任何夸大的表述可能被举报？\n→ 承诺不兑现 → 🔴 CRITICAL\n\n### 第二波：SEO盲区攻击\n- 标题是否包含目标受众会搜索的关键词？\n- 标签是否覆盖：核心词（必搜）+ 流量词（蹭热点）+ 长尾词（精准）？\n- 简介前100字（折叠前可见部分）是否包含核心关键词？\n- 分区选择是否正确（错分区=无推荐）？\n→ 关键搜索词缺失 → 🟠 HIGH\n\n### 第三波：缩略图可读性攻击\n- 封面文案在B站信息流缩略图尺寸下（约240×135px）是否仍然可读？\n- 大字标题在缩略图中是否被裁剪/不可读？\n- 封面配色在信息流中是否突出（而非与B站UI融为一体）？\n- 封面元素是否过于复杂（缩略图中看不清）？\n→ 缩略图不可读 → 🟠 HIGH\n\n### 第四波：合规风险攻击\n扫描全部发布文案（标题+标签+简介+封面文字）：\n- 是否有极限词（“最”“第一”“100%“等广告法违禁词）？\n- 是否有敏感政治/社会话题词汇？\n- 是否有侵权风险（未授权的品牌名/作品名/人名）？\n- AI相关内容是否有误导性声明？\n→ 发现违禁/敏感内容 → 🔴 CRITICAL\n\n### 第五波：竞品截流攻击\n对比B站同类热门视频的发布素材：\n- 同主题下，点击率最高的标题有什么特征？本素材有没有？\n- 同类视频的封面风格是什么？本素材是否看起来“不像热门视频“？\n- 标签是否比竞品更全面/更精准？\n- 简介的互动引导是否比竞品更有吸引力？\n→ 明显劣于竞品 → 🟡 MEDIUM\n\n## 📜 历史漏洞知识库\n| 漏洞ID | 描述 | 历史频次 |\n|--------|------|--------|\n| PUB-01 | 标题太平淡无吸引力 | 中频 |\n| PUB-02 | 标签不够/不精准 | 中频 |\n| PUB-03 | 分区选错 | 低频 |\n| PUB-04 | 封面文案在缩略图不可读 | 中频 |\n| PUB-05 | 简介前100字无吸引力 | 中频 |\n| PUB-06 | 违禁词/敏感词 | 低频 |\n\n## 🔄 攻击增强策略\n- 第1次：基线攻击（五波各一次）\n- 第2次：编码增强（用B站搜索验证——搜关键词看本视频能否被找到）\n- 第3次：对话增强（深入挖掘竞品对比，找更多可优化的点）\n- 第4次：组合攻击（标题+封面+简介组合拳——整体点击率预估）\n- 第5次：终极总攻（模拟B站审核+真实用户A/B测试思维）\n\n## 📊 攻击报告格式\n\n### 🔴 CRITICAL（致命漏洞 — 发布即事故，被举报/下架风险）\n| # | 漏洞 | 攻击路径 | 防御方案 |\n|---|------|---------|---------|\n\n### 🟠 HIGH（严重缺陷 — 大概率导致低点击/低推荐）\n| # | 缺陷 | 攻击路径 | 防御方案 |\n|---|------|---------|---------|\n\n### 🟡 MEDIUM（中等风险 — 累计≥3则FAIL）\n\n### 🟢 LOW（轻微瑕疵）\n\n### 📋 历史漏洞复发检查\n| 漏洞ID | 状态 |\n|--------|------|\n| PUB-01~06 | 逐条标注 ✅/❌ |\n\n### 🏆 最终判定\n- 统计：🔴CRITICAL X | 🟠HIGH Y | 🟡MEDIUM Z\n- 判定：**FAIL**（≥1 CRITICAL 或 ≥1 HIGH 或 ≥3 MEDIUM）/ **PASS**\n\n完成后标注：REDTEAM_PUB_COMPLETE。",
         "builtInType": "explore",
         "agentType": "claudeCode",
         "outputPorts": 1
@@ -599,12 +870,23 @@
       "type": "askUserQuestion",
       "name": "pub-review-ask",
       "parentId": "g9-publish",
-      "position": { "x": 370, "y": 120 },
+      "position": {
+        "x": 370,
+        "y": 120
+      },
       "data": {
-        "questionText": "发布素材审查结果？",
+        "questionText": "🔴 红队攻击报告：发布素材",
         "options": [
-          { "label": "通过，生成发布指南", "description": "素材优化到位，输出手动发布步骤", "id": "opt-pub-pass" },
-          { "label": "不通过", "description": "需优化发布素材", "id": "opt-pub-fail" }
+          {
+            "label": "🛡️ 全部抵御，生成发布指南",
+            "description": "发布素材通过红队攻击，输出最终发布清单",
+            "id": "opt-pub-pass"
+          },
+          {
+            "label": "💥 被攻破，优化",
+            "description": "存在漏洞需优化（最多3次重试）",
+            "id": "opt-pub-fail"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -616,10 +898,13 @@
       "type": "prompt",
       "name": "pub-retry-note",
       "parentId": "g9-publish",
-      "position": { "x": 370, "y": 330 },
+      "position": {
+        "x": 370,
+        "y": 330
+      },
       "data": {
-        "label": "发布素材重试",
-        "prompt": "发布素材需优化。请agent-publish阅读上文审查反馈，针对性修改。最多5次重试。",
+        "label": "发布素材红队攻击未通过",
+        "prompt": "🔴 红队攻击未通过（最多3次重试）。\n\n请 agent-publish 仔细阅读上文的完整红队攻击报告（以 REDTEAM_PUB_COMPLETE 标注结尾），针对性修改标题/标签/封面文案/简介。注意防御方案中的具体文案建议。合规风险（违禁词/敏感词）为 CRITICAL——必须立即修复。",
         "variables": {}
       }
     },
@@ -628,12 +913,23 @@
       "type": "askUserQuestion",
       "name": "pub-escalate-ask",
       "parentId": "g9-publish",
-      "position": { "x": 400, "y": 220 },
+      "position": {
+        "x": 400,
+        "y": 220
+      },
       "data": {
-        "questionText": "发布素材已重试多次，是否升级？",
+        "questionText": "发布素材已抵御多轮攻击但仍未通过，是否升级？（最多3次重试）",
         "options": [
-          { "label": "继续重试", "description": "回到发布素材Agent修改", "id": "opt-pub-retry" },
-          { "label": "升级给用户", "description": "暂停自动化，需手动介入处理发布素材（查看上文审查报告了解问题）", "id": "opt-pub-esc" }
+          {
+            "label": "继续加强攻击",
+            "description": "回到发布素材Agent修改，下一轮更强",
+            "id": "opt-pub-retry"
+          },
+          {
+            "label": "升级给用户",
+            "description": "暂停自动化，需手动介入（查看上文红队攻击报告）",
+            "id": "opt-pub-esc"
+          }
         ],
         "multiSelect": false,
         "useAiSuggestions": false,
@@ -645,7 +941,10 @@
       "type": "prompt",
       "name": "publish-guide",
       "parentId": "g9-publish",
-      "position": { "x": 410, "y": 130 },
+      "position": {
+        "x": 410,
+        "y": 130
+      },
       "data": {
         "label": "手动发布指南",
         "prompt": "## B站发布清单\n\n请将以下素材手动填入B站创作中心。\n\n### 发布URL\nhttps://member.bilibili.com/platform/upload/video/frame\n\n### 字段规范\n| 字段 | 限制 |\n|------|------|\n| 标题 | ≤80字 |\n| 分区 | 必选（二级分区） |\n| 标签 | ≤10个，每个≤20字 |\n| 封面 | 1920×1080 或 1146×717，JPG/PNG |\n| 简介 | 前100字折叠前可见 |\n\n### 注意事项\n1. 上传后需经B站审核（通常30分钟-2小时）\n2. 审核通过后才公开可见\n3. 如需定时发布，在发布设置中选择\n4. 系列视频可在发布后归入合集\n5. 建议发布后关注数据和弹幕反馈\n\n### 你的发布素材\n（参考上文agent-publish的输出）\n\n🎉 工作流完成！",
@@ -656,73 +955,589 @@
       "id": "end-success",
       "type": "end",
       "name": "success",
-      "position": { "x": 5800, "y": 300 },
-      "data": { "label": "发布完成 ✅" }
+      "position": {
+        "x": 5800,
+        "y": 300
+      },
+      "data": {
+        "label": "发布完成 ✅"
+      }
     },
     {
       "id": "end-escalated",
       "type": "end",
       "name": "escalated",
-      "position": { "x": 5800, "y": 500 },
-      "data": { "label": "暂停·需人工介入 ⚠️" }
+      "position": {
+        "x": 5800,
+        "y": 500
+      },
+      "data": {
+        "label": "暂停·需人工介入 ⚠️"
+      }
+    },
+    {
+      "id": "barrier-html-tts",
+      "type": "prompt",
+      "name": "barrier-html-tts",
+      "parentId": "g8-assembly",
+      "position": {
+        "x": 30,
+        "y": -100
+      },
+      "data": {
+        "label": "HTML+TTS双通道汇合（prompt节点模拟AND-join）",
+        "prompt": "HTML动画帧审查和TTS音频审查均已通过红队攻击测试。两侧产物已就绪，汇入视频合成阶段。注意：本节点为prompt类型，不具备引擎级AND-join语义——当两侧均完成时手动确认继续。下一步：agent-assemble 视频合成。",
+        "variables": {}
+      }
+    },
+    {
+      "id": "agent-material-review",
+      "type": "subAgent",
+      "name": "material-reviewer",
+      "parentId": "g4-material",
+      "position": {
+        "x": 30,
+        "y": 190
+      },
+      "data": {
+        "description": "红队攻击：证明素材中的配色/技术资料/视觉参考存在错误",
+        "agentDefinition": "红队素材攻击Agent。攻击素材收集结果——证明配色建议、技术资料、视觉参考存在错误或不适合本视频。",
+        "prompt": "你是一名🔴红队攻击专家。你的任务是**攻击**素材收集的结果——证明这些配色方案、技术资料、视觉参考会误导后续制作。\n\n## ⚔️ 攻击原则\n1. **事实核查**：逐条验证技术资料的准确性（数据来源、术语定义）\n2. **适用性攻击**：推荐的配色/动画风格是否真的适合本视频主题？暗色背景下是否可读？\n3. **完整性攻击**：是否遗漏了关键素材？（重要的技术概念无参考资料、缺少必要的配色方案）\n4. **攻击→防御闭环**：每个漏洞必须有具体的补充/修正方案\n\n## 🎯 三波攻击\n\n### 第一波：技术准确性攻击\n- 技术资料中的数据是否有可靠来源？\n- 术语定义是否准确（AI领域极易用错）？\n- 代码示例是否可运行（如有）？\n→ 发现事实错误 → 🔴 CRITICAL\n\n### 第二波：视觉适用性攻击\n- 推荐配色在暗色背景(#0a0a0f~#0d0d14)上对比度是否≥4.5:1？\n- 推荐动画风格是否匹配知识分享定位（而非娱乐/炫技）？\n- 字体建议是否在[Geist, Noto Sans SC]范围内（禁止Inter）？\n→ 不适用 → 🟠 HIGH\n\n### 第三波：覆盖完整性攻击\n- 脚本中的每个核心技术概念是否都有对应的参考资料？\n- 是否缺少关键数据可视化建议？\n- 是否有\"应该收集但没收集\"的素材？\n→ 关键遗漏 → 🟠 HIGH\n\n## 📊 攻击报告格式（标准红队四级）\n\n### 🔴 CRITICAL | 🟠 HIGH | 🟡 MEDIUM | 🟢 LOW\n\n### 🏆 最终判定\n- 统计：🔴CRITICAL X | 🟠HIGH Y | 🟡MEDIUM Z\n- 判定：**FAIL**（>=1 CRITICAL 或 >=1 HIGH 或 >=3 MEDIUM）/ **PASS**\n\n完成后标注：REDTEAM_MATERIAL_COMPLETE。",
+        "builtInType": "explore",
+        "agentType": "claudeCode",
+        "outputPorts": 1
+      }
+    },
+    {
+      "id": "ask-material-review",
+      "type": "askUserQuestion",
+      "name": "material-review-ask",
+      "parentId": "g4-material",
+      "position": {
+        "x": 250,
+        "y": 250
+      },
+      "data": {
+        "questionText": "红队攻击报告：素材收集",
+        "options": [
+          {
+            "label": "全部抵御，继续",
+            "description": "素材通过红队攻击",
+            "id": "opt-mat-pass"
+          },
+          {
+            "label": "被攻破，修复",
+            "description": "存在问题需修复（最多3次）",
+            "id": "opt-mat-fail"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
+    },
+    {
+      "id": "prompt-material-retry",
+      "type": "prompt",
+      "name": "material-retry-note",
+      "parentId": "g4-material",
+      "position": {
+        "x": 250,
+        "y": 350
+      },
+      "data": {
+        "label": "素材红队攻击未通过",
+        "prompt": "红队攻击报告：素材收集存在漏洞。请agent-material仔细阅读上文攻击报告（以REDTEAM_MATERIAL_COMPLETE标注结尾），针对性补充或修正。技术资料准确性为CRITICAL级别。",
+        "variables": {}
+      }
+    },
+    {
+      "id": "ask-material-escalate",
+      "type": "askUserQuestion",
+      "name": "material-escalate-ask",
+      "parentId": "g4-material",
+      "position": {
+        "x": 380,
+        "y": 250
+      },
+      "data": {
+        "questionText": "素材已抵御多轮攻击仍未通过，是否升级？（最多3次）",
+        "options": [
+          {
+            "label": "继续加强攻击",
+            "description": "回到素材收集Agent修正（3次上限）",
+            "id": "opt-mat-retry"
+          },
+          {
+            "label": "升级给用户",
+            "description": "暂停自动化，需手动介入",
+            "id": "opt-mat-esc"
+          }
+        ],
+        "multiSelect": false,
+        "useAiSuggestions": false,
+        "outputPorts": 2
+      }
     }
   ],
   "connections": [
-    { "id": "c01", "from": "start-1", "to": "prompt-topic", "fromPort": "output", "toPort": "input" },
-    { "id": "c02", "from": "prompt-topic", "to": "agent-trending", "fromPort": "output", "toPort": "input" },
-    { "id": "c03", "from": "agent-trending", "to": "agent-match", "fromPort": "output", "toPort": "input" },
-    { "id": "c04", "from": "agent-match", "to": "ask-topic", "fromPort": "output", "toPort": "input" },
-    { "id": "c05", "from": "ask-topic", "to": "agent-orchestrator", "fromPort": "branch-0", "toPort": "input", "condition": "确认推荐选题" },
-    { "id": "c06", "from": "ask-topic", "to": "prompt-topic-final", "fromPort": "branch-1", "toPort": "input", "condition": "用户指定其他选题" },
-    { "id": "c07", "from": "prompt-topic-final", "to": "agent-orchestrator", "fromPort": "output", "toPort": "input" },
-    { "id": "c08", "from": "agent-orchestrator", "to": "agent-script", "fromPort": "output", "toPort": "input" },
-    { "id": "c09", "from": "agent-script", "to": "agent-script-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c10", "from": "agent-script-review", "to": "ask-script-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c11", "from": "ask-script-review", "to": "agent-material", "fromPort": "branch-0", "toPort": "input", "condition": "剧本通过→收集素材" },
-    { "id": "c12", "from": "ask-script-review", "to": "prompt-script-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试提醒" },
-    { "id": "c13", "from": "prompt-script-retry", "to": "ask-script-escalate", "fromPort": "output", "toPort": "input" },
-    { "id": "c14", "from": "ask-script-escalate", "to": "agent-script", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
-    { "id": "c15", "from": "ask-script-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→脚本阶段卡死" },
-    { "id": "c16", "from": "agent-material", "to": "agent-narr", "fromPort": "output", "toPort": "input" },
-    { "id": "c17", "from": "agent-narr", "to": "agent-narr-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c18", "from": "agent-narr-review", "to": "ask-narr-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c19", "from": "ask-narr-review", "to": "agent-html", "fromPort": "branch-0", "toPort": "input", "condition": "通过→并行生产HTML" },
-    { "id": "c20", "from": "ask-narr-review", "to": "agent-tts", "fromPort": "branch-0", "toPort": "input", "condition": "通过→并行生产TTS" },
-    { "id": "c21", "from": "ask-narr-review", "to": "prompt-narr-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
-    { "id": "c22", "from": "prompt-narr-retry", "to": "ask-narr-escalate", "fromPort": "output", "toPort": "input" },
-    { "id": "c23", "from": "ask-narr-escalate", "to": "agent-narr", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
-    { "id": "c24", "from": "ask-narr-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→旁白阶段卡死" },
-    { "id": "c25", "from": "agent-html", "to": "agent-html-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c26", "from": "agent-html-review", "to": "ask-html-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c27", "from": "ask-html-review", "to": "agent-assemble", "fromPort": "branch-0", "toPort": "input", "condition": "通过→汇入合成" },
-    { "id": "c28", "from": "ask-html-review", "to": "prompt-html-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
-    { "id": "c29", "from": "prompt-html-retry", "to": "ask-html-escalate", "fromPort": "output", "toPort": "input" },
-    { "id": "c30", "from": "ask-html-escalate", "to": "agent-html", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
-    { "id": "c31", "from": "ask-html-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→HTML阶段卡死" },
-    { "id": "c32", "from": "agent-tts", "to": "agent-tts-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c33", "from": "agent-tts-review", "to": "ask-tts-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c34", "from": "ask-tts-review", "to": "agent-assemble", "fromPort": "branch-0", "toPort": "input", "condition": "通过→汇入合成" },
-    { "id": "c35", "from": "ask-tts-review", "to": "prompt-tts-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
-    { "id": "c36", "from": "prompt-tts-retry", "to": "ask-tts-escalate", "fromPort": "output", "toPort": "input" },
-    { "id": "c37", "from": "ask-tts-escalate", "to": "agent-tts", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
-    { "id": "c38", "from": "ask-tts-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→TTS阶段卡死" },
-    { "id": "c39", "from": "agent-assemble", "to": "agent-assembly-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c40", "from": "agent-assembly-review", "to": "ask-assembly-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c41", "from": "ask-assembly-review", "to": "agent-publish", "fromPort": "branch-0", "toPort": "input", "condition": "通过→发布" },
-    { "id": "c42", "from": "ask-assembly-review", "to": "prompt-assembly-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
-    { "id": "c43", "from": "prompt-assembly-retry", "to": "ask-assembly-escalate", "fromPort": "output", "toPort": "input" },
-    { "id": "c44", "from": "ask-assembly-escalate", "to": "agent-assemble", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
-    { "id": "c45", "from": "ask-assembly-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→合成阶段卡死" },
-    { "id": "c46", "from": "agent-publish", "to": "agent-pub-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c47", "from": "agent-pub-review", "to": "ask-pub-review", "fromPort": "output", "toPort": "input" },
-    { "id": "c48", "from": "ask-pub-review", "to": "prompt-pub-manual", "fromPort": "branch-0", "toPort": "input", "condition": "通过→发布指南" },
-    { "id": "c49", "from": "ask-pub-review", "to": "prompt-pub-retry", "fromPort": "branch-1", "toPort": "input", "condition": "不通过→重试" },
-    { "id": "c50", "from": "prompt-pub-retry", "to": "ask-pub-escalate", "fromPort": "output", "toPort": "input" },
-    { "id": "c51", "from": "ask-pub-escalate", "to": "agent-publish", "fromPort": "branch-0", "toPort": "input", "condition": "继续重试" },
-    { "id": "c52", "from": "ask-pub-escalate", "to": "end-escalated", "fromPort": "branch-1", "toPort": "input", "condition": "升级→发布阶段卡死" },
-    { "id": "c53", "from": "prompt-pub-manual", "to": "end-success", "fromPort": "output", "toPort": "input" }
+    {
+      "id": "c01",
+      "from": "start-1",
+      "to": "prompt-topic",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c02",
+      "from": "prompt-topic",
+      "to": "agent-trending",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c03",
+      "from": "agent-trending",
+      "to": "agent-match",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c04",
+      "from": "agent-match",
+      "to": "ask-topic",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c05",
+      "from": "ask-topic",
+      "to": "agent-orchestrator",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "确认推荐选题"
+    },
+    {
+      "id": "c06",
+      "from": "ask-topic",
+      "to": "prompt-topic-final",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "用户指定其他选题"
+    },
+    {
+      "id": "c07",
+      "from": "prompt-topic-final",
+      "to": "agent-orchestrator",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c08",
+      "from": "agent-orchestrator",
+      "to": "agent-script",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c09",
+      "from": "agent-script",
+      "to": "agent-script-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c10",
+      "from": "agent-script-review",
+      "to": "ask-script-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c11",
+      "from": "ask-script-review",
+      "to": "agent-material",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "剧本通过→收集素材"
+    },
+    {
+      "id": "c12",
+      "from": "ask-script-review",
+      "to": "prompt-script-retry",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "不通过→重试提醒"
+    },
+    {
+      "id": "c13",
+      "from": "prompt-script-retry",
+      "to": "ask-script-escalate",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c14",
+      "from": "ask-script-escalate",
+      "to": "agent-script",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "继续重试"
+    },
+    {
+      "id": "c15",
+      "from": "ask-script-escalate",
+      "to": "end-escalated",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "升级→脚本阶段卡死"
+    },
+    {
+      "id": "c16",
+      "from": "agent-material",
+      "to": "agent-material-review",
+      "fromPort": "output",
+      "toPort": "input",
+      "condition": "素材完成"
+    },
+    {
+      "id": "c17",
+      "from": "agent-narr",
+      "to": "agent-narr-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c18",
+      "from": "agent-narr-review",
+      "to": "ask-narr-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c19",
+      "from": "ask-narr-review",
+      "to": "agent-html",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "通过→并行生产HTML"
+    },
+    {
+      "id": "c20",
+      "from": "ask-narr-review",
+      "to": "agent-tts",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "通过→并行生产TTS"
+    },
+    {
+      "id": "c21",
+      "from": "ask-narr-review",
+      "to": "prompt-narr-retry",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "不通过→重试"
+    },
+    {
+      "id": "c22",
+      "from": "prompt-narr-retry",
+      "to": "ask-narr-escalate",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c23",
+      "from": "ask-narr-escalate",
+      "to": "agent-narr",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "继续重试"
+    },
+    {
+      "id": "c24",
+      "from": "ask-narr-escalate",
+      "to": "end-escalated",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "升级→旁白阶段卡死"
+    },
+    {
+      "id": "c25",
+      "from": "agent-html",
+      "to": "agent-html-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c26",
+      "from": "agent-html-review",
+      "to": "ask-html-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c27",
+      "from": "ask-html-review",
+      "to": "barrier-html-tts",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "HTML通过"
+    },
+    {
+      "id": "c28",
+      "from": "ask-html-review",
+      "to": "prompt-html-retry",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "不通过→重试"
+    },
+    {
+      "id": "c29",
+      "from": "prompt-html-retry",
+      "to": "ask-html-escalate",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c30",
+      "from": "ask-html-escalate",
+      "to": "agent-html",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "继续重试"
+    },
+    {
+      "id": "c31",
+      "from": "ask-html-escalate",
+      "to": "end-escalated",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "升级→HTML阶段卡死"
+    },
+    {
+      "id": "c32",
+      "from": "agent-tts",
+      "to": "agent-tts-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c33",
+      "from": "agent-tts-review",
+      "to": "ask-tts-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c34",
+      "from": "ask-tts-review",
+      "to": "barrier-html-tts",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "TTS通过"
+    },
+    {
+      "id": "c35",
+      "from": "ask-tts-review",
+      "to": "prompt-tts-retry",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "不通过→重试"
+    },
+    {
+      "id": "c36",
+      "from": "prompt-tts-retry",
+      "to": "ask-tts-escalate",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c37",
+      "from": "ask-tts-escalate",
+      "to": "agent-tts",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "继续重试"
+    },
+    {
+      "id": "c38",
+      "from": "ask-tts-escalate",
+      "to": "end-escalated",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "升级→TTS阶段卡死"
+    },
+    {
+      "id": "c39",
+      "from": "agent-assemble",
+      "to": "agent-assembly-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c40",
+      "from": "agent-assembly-review",
+      "to": "ask-assembly-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c41",
+      "from": "ask-assembly-review",
+      "to": "agent-publish",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "通过→发布"
+    },
+    {
+      "id": "c42",
+      "from": "ask-assembly-review",
+      "to": "prompt-assembly-retry",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "不通过→重试"
+    },
+    {
+      "id": "c43",
+      "from": "prompt-assembly-retry",
+      "to": "ask-assembly-escalate",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c44",
+      "from": "ask-assembly-escalate",
+      "to": "agent-assemble",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "继续重试"
+    },
+    {
+      "id": "c45",
+      "from": "ask-assembly-escalate",
+      "to": "end-escalated",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "升级→合成阶段卡死"
+    },
+    {
+      "id": "c46",
+      "from": "agent-publish",
+      "to": "agent-pub-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c47",
+      "from": "agent-pub-review",
+      "to": "ask-pub-review",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c48",
+      "from": "ask-pub-review",
+      "to": "prompt-pub-manual",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "通过→发布指南"
+    },
+    {
+      "id": "c49",
+      "from": "ask-pub-review",
+      "to": "prompt-pub-retry",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "不通过→重试"
+    },
+    {
+      "id": "c50",
+      "from": "prompt-pub-retry",
+      "to": "ask-pub-escalate",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c51",
+      "from": "ask-pub-escalate",
+      "to": "agent-publish",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "继续重试"
+    },
+    {
+      "id": "c52",
+      "from": "ask-pub-escalate",
+      "to": "end-escalated",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "升级→发布阶段卡死"
+    },
+    {
+      "id": "c53",
+      "from": "prompt-pub-manual",
+      "to": "end-success",
+      "fromPort": "output",
+      "toPort": "input"
+    },
+    {
+      "id": "c54",
+      "from": "barrier-html-tts",
+      "to": "agent-assemble",
+      "fromPort": "output",
+      "toPort": "input",
+      "condition": "双通道就绪"
+    },
+    {
+      "id": "c55",
+      "from": "agent-material-review",
+      "to": "ask-material-review",
+      "fromPort": "output",
+      "toPort": "input",
+      "condition": "攻击报告"
+    },
+    {
+      "id": "c56",
+      "from": "ask-material-review",
+      "to": "agent-narr",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "通过"
+    },
+    {
+      "id": "c57",
+      "from": "ask-material-review",
+      "to": "prompt-material-retry",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "不通过"
+    },
+    {
+      "id": "c58",
+      "from": "prompt-material-retry",
+      "to": "ask-material-escalate",
+      "fromPort": "output",
+      "toPort": "input",
+      "condition": "重试"
+    },
+    {
+      "id": "c59",
+      "from": "ask-material-escalate",
+      "to": "agent-material",
+      "fromPort": "branch-0",
+      "toPort": "input",
+      "condition": "继续"
+    },
+    {
+      "id": "c60",
+      "from": "ask-material-escalate",
+      "to": "end-escalated",
+      "fromPort": "branch-1",
+      "toPort": "input",
+      "condition": "升级"
+    }
   ],
   "createdAt": "2026-06-26T07:30:00.000Z",
-  "updatedAt": "2026-06-28T12:00:00.000Z",
+  "updatedAt": "2026-07-02T10:30:00.000Z",
   "subAgentFlows": []
 }
